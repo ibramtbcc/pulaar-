@@ -62,20 +62,46 @@ export default function Music() {
                 <div className="w-8" />
               </div>
 
-              {/* Album art */}
+              {/* Album art — dynamic visual */}
               <motion.div
                 key={current}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                className="w-64 h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 rounded-3xl flex items-center justify-center"
+                className="w-64 h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 rounded-3xl relative overflow-hidden"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(181,130,78,0.15) 0%, rgba(12,11,9,0.9) 100%)',
                   border: '1px solid rgba(181,130,78,0.1)',
                   boxShadow: '0 24px 80px rgba(0,0,0,0.5)',
                 }}
               >
-                <IconRadio size={80} />
+                {/* Dynamic gradient that shifts per track */}
+                <div className="absolute inset-0" style={{
+                  background: `linear-gradient(${135 + current * 25}deg, rgba(181,130,78,${0.15 + (current % 3) * 0.05}) 0%, rgba(${80 + current * 10},${60 + current * 8},${30 + current * 5},0.2) 50%, rgba(12,11,9,0.95) 100%)`,
+                }} />
+                {/* Geometric pattern overlay */}
+                <div className="absolute inset-0 opacity-[0.04]" style={{
+                  backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(181,130,78,0.5) 20px, rgba(181,130,78,0.5) 21px)`,
+                }} />
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <IconRadio size={48} />
+                  <p className="text-xs font-semibold mt-3 uppercase tracking-widest" style={{ color: 'rgba(245,240,234,0.3)' }}>
+                    {track.artist.split(' ')[0]}
+                  </p>
+                </div>
+                {/* Animated equalizer at bottom when playing */}
+                {playing && (
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-end gap-1 h-6">
+                    {[0, 1, 2, 3, 4, 5, 6, 7].map((b) => (
+                      <motion.div
+                        key={b}
+                        className="w-1 rounded-full"
+                        style={{ background: 'rgba(181,130,78,0.6)' }}
+                        animate={{ height: ['4px', `${12 + Math.random() * 12}px`, '4px'] }}
+                        transition={{ duration: 0.6 + Math.random() * 0.4, repeat: Infinity, delay: b * 0.08 }}
+                      />
+                    ))}
+                  </div>
+                )}
               </motion.div>
 
               {/* Track info */}
@@ -111,8 +137,8 @@ export default function Music() {
               </div>
             </div>
 
-            {/* Right: Playlist (desktop only) */}
-            <div className="hidden lg:block w-[380px] mt-4">
+            {/* Right: Playlist (all devices) */}
+            <div className="w-full lg:w-[380px] mt-10 lg:mt-4">
               <h3 className="text-label mb-4">Playlist</h3>
               <div className="flex flex-col gap-1">
                 {tracks.map((t, i) => (

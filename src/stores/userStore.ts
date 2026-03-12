@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 interface UserState {
   prenom: string
@@ -9,29 +10,40 @@ interface UserState {
   villeOrigine: string
   paysActuel: string
   niveauPulaar: string
-  source: string
+  source: string[]
   dateNaissance: string
   yettore: string
   score: number
   isOnboarded: boolean
-  setField: (field: string, value: string | number | boolean | null) => void
+  setField: (field: string, value: unknown) => void
   completeOnboarding: () => void
+  reset: () => void
 }
 
-export const useUserStore = create<UserState>((set) => ({
+const initialState = {
   prenom: '',
   nom: '',
-  genre: null,
-  avatarId: null,
+  genre: null as 'gorko' | 'debbo' | null,
+  avatarId: null as string | null,
   paysRacine: '',
   villeOrigine: '',
   paysActuel: '',
   niveauPulaar: '',
-  source: '',
+  source: [] as string[],
   dateNaissance: '',
   yettore: '',
   score: 0,
   isOnboarded: false,
-  setField: (field, value) => set((state) => ({ ...state, [field]: value })),
-  completeOnboarding: () => set({ isOnboarded: true }),
-}))
+}
+
+export const useUserStore = create<UserState>()(
+  persist(
+    (set) => ({
+      ...initialState,
+      setField: (field, value) => set((state) => ({ ...state, [field]: value })),
+      completeOnboarding: () => set({ isOnboarded: true }),
+      reset: () => set(initialState),
+    }),
+    { name: 'pulaar-user' }
+  )
+)

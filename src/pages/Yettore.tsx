@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import SplashScreen from '../components/shared/SplashScreen'
-import { IconBaobab } from '../components/shared/Icons'
+import { IconBaobab, IconQuestion, IconBook } from '../components/shared/Icons'
+import { useUserStore } from '../stores/userStore'
 import ScrollReveal from '../components/shared/ScrollReveal'
 import { useIsTablet } from '../hooks/useMediaQuery'
 
@@ -19,10 +20,10 @@ const rankings = [
 ]
 
 const catWinners = [
-  { cat: 'Quiz', name: 'Diallo', icon: '?' },
-  { cat: 'Academy', name: 'Ba', icon: 'A' },
-  { cat: 'Progression', name: 'Sow', icon: '+' },
-  { cat: 'Plus actif', name: 'Barry', icon: '*' },
+  { cat: 'Quiz', name: 'Diallo', iconEl: <IconQuestion size={20} /> },
+  { cat: 'Academy', name: 'Ba', iconEl: <IconBook size={20} /> },
+  { cat: 'Progression', name: 'Sow', iconEl: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b5824e" strokeWidth="1.5"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg> },
+  { cat: 'Plus actif', name: 'Barry', iconEl: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b5824e" strokeWidth="1.5"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="3"/></svg> },
 ]
 
 function AnimCounter({ target, duration = 1200 }: { target: number; duration?: number }) {
@@ -38,8 +39,10 @@ function AnimCounter({ target, duration = 1200 }: { target: number; duration?: n
 
 export default function Yettore() {
   const isTablet = useIsTablet()
+  const { nom } = useUserStore()
   const [showSplash, setShowSplash] = useState(!isTablet)
   const [tab, setTab] = useState<'general' | 'categories'>('general')
+  const userYettore = nom || 'Diallo'
 
   if (showSplash) return <SplashScreen icon={<IconBaobab size={120} />} title="Yettore" onComplete={() => setShowSplash(false)} />
 
@@ -109,8 +112,13 @@ export default function Yettore() {
                           {r.members} membres · <AnimCounter target={r.avg} /> pts/moy
                         </p>
                       </div>
-                      <span className="text-xs font-semibold" style={{ color: r.trend === 'up' ? '#4ade80' : '#ef4444' }}>
-                        {r.trend === 'up' ? '▲' : '▼'}
+                      <span style={{ color: r.trend === 'up' ? '#4ade80' : '#ef4444' }}>
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                          {r.trend === 'up'
+                            ? <path d="M6 2L10 8H2L6 2Z" />
+                            : <path d="M6 10L2 4H10L6 10Z" />
+                          }
+                        </svg>
                       </span>
                     </div>
                   </ScrollReveal>
@@ -124,7 +132,7 @@ export default function Yettore() {
                     <span className="w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold"
                       style={{ background: 'rgba(181,130,78,0.12)', color: '#b5824e' }}>Toi</span>
                     <div>
-                      <h3 className="text-h3">Diallo</h3>
+                      <h3 className="text-h3">{userYettore}</h3>
                       <p className="text-small mt-0.5">1er · 124 pts derriere les Ba</p>
                     </div>
                   </div>
@@ -150,8 +158,8 @@ export default function Yettore() {
                 {catWinners.map((cw, i) => (
                   <ScrollReveal key={cw.cat} delay={i * 0.08}>
                     <div className="surface-card card-hover p-5 md:p-6">
-                      <span className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-lg font-bold"
-                        style={{ background: 'rgba(181,130,78,0.08)', color: '#b5824e' }}>{cw.icon}</span>
+                      <span className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+                        style={{ background: 'rgba(181,130,78,0.08)' }}>{cw.iconEl}</span>
                       <p className="text-label text-[10px]">{cw.cat}</p>
                       <p className="text-h3 mt-2">{cw.name}</p>
                     </div>
@@ -162,7 +170,7 @@ export default function Yettore() {
               {/* Invite */}
               <ScrollReveal>
                 <div className="rounded-2xl p-6 md:p-8 mt-8 text-center" style={{ background: 'rgba(181,130,78,0.06)', border: '1px solid rgba(181,130,78,0.15)' }}>
-                  <p className="text-h3">Les DIALLO comptent sur toi !</p>
+                  <p className="text-h3">Les {userYettore.toUpperCase()} comptent sur toi !</p>
                   <button className="btn-primary mt-6">Inviter des membres de ma famille</button>
                 </div>
               </ScrollReveal>

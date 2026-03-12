@@ -1,74 +1,58 @@
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import ScrollReveal from '../components/shared/ScrollReveal'
+import { useUserStore } from '../stores/userStore'
 import { IconBook, IconQuestion, IconRadio, IconPot, IconBaobab, IconStars, IconGlobe, IconPlay } from '../components/shared/Icons'
 
-/* ─── Animated Counter ─── */
-function AnimatedCounter({ target, duration = 1400, suffix = '', prefix = '' }: { target: number; duration?: number; suffix?: string; prefix?: string }) {
-  const ref = useRef<HTMLSpanElement>(null)
-  const hasAnimated = useRef(false)
-
-  useEffect(() => {
-    const el = ref.current
-    if (!el || hasAnimated.current) return
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !hasAnimated.current) {
-          hasAnimated.current = true
-          const start = performance.now()
-          function animate(now: number) {
-            const p = Math.min((now - start) / duration, 1)
-            const eased = 1 - Math.pow(1 - p, 3)
-            el!.textContent = prefix + Math.round(eased * target).toLocaleString() + suffix
-            if (p < 1) requestAnimationFrame(animate)
-          }
-          requestAnimationFrame(animate)
-        }
-      },
-      { threshold: 0.3 }
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [target, duration, suffix, prefix])
-
-  return <span ref={ref}>{prefix}0{suffix}</span>
+/* ─── Fulani geometric SVG pattern (inline) ─── */
+function FulaniPattern() {
+  return (
+    <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg" opacity="0.035">
+      <defs>
+        <pattern id="fulani" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+          <path d="M30 0L60 30L30 60L0 30Z" fill="none" stroke="#b5824e" strokeWidth="0.5" />
+          <path d="M30 10L50 30L30 50L10 30Z" fill="none" stroke="#b5824e" strokeWidth="0.3" />
+          <path d="M30 20L40 30L30 40L20 30Z" fill="none" stroke="#c49a62" strokeWidth="0.3" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#fulani)" />
+    </svg>
+  )
 }
 
-/* ─── Rubriques Data ─── */
-const rubriques = [
-  { to: '/quiz', icon: <IconQuestion size={28} />, title: 'Quiz', desc: 'Teste tes connaissances sur la culture Peule', color: 'rgba(181,130,78,0.12)', stat: '100 questions' },
-  { to: '/academy', icon: <IconBook size={28} />, title: 'Academy', desc: 'Apprends le Pulaar pas a pas', color: 'rgba(74,222,128,0.08)', stat: '13 lecons' },
-  { to: '/music', icon: <IconRadio size={28} />, title: 'Music', desc: 'Ecoute la playlist 100% Pulaar', color: 'rgba(139,92,246,0.08)', stat: '10 titres' },
-  { to: '/kitchen', icon: <IconPot size={28} />, title: 'Kitchen', desc: 'Decouvre les recettes traditionnelles Peules', color: 'rgba(245,158,11,0.08)', stat: '8 recettes' },
-  { to: '/yettore', icon: <IconBaobab size={28} />, title: 'Yettore', desc: 'Decouvre ton patronyme et ta lignee', color: 'rgba(59,130,246,0.08)', stat: '10 familles' },
-  { to: '/peul-fier', icon: <IconStars size={28} />, title: 'Peul & Fier', desc: 'Les grandes personnalites de la culture Peule', color: 'rgba(244,63,94,0.08)', stat: '6 figures' },
-  { to: '/peulnation', icon: <IconGlobe size={28} />, title: 'PeulNation', desc: 'La presence Peule dans le monde', color: 'rgba(34,211,238,0.08)', stat: '15+ pays' },
-]
-
-const stats = [
-  { value: 45, suffix: 'M+', label: 'Peuls dans le monde' },
-  { value: 1247, suffix: '', label: 'Inscrits actifs' },
-  { value: 15, suffix: '+', label: 'Pays representes' },
-  { value: 8, suffix: '', label: 'Rubriques' },
-]
+/* ─── Equalizer bars animation for Music card ─── */
+function EqBars() {
+  return (
+    <div className="flex items-end gap-[3px] h-5 opacity-40">
+      {[0.6, 1, 0.4, 0.8, 0.5].map((scale, i) => (
+        <motion.div
+          key={i}
+          className="w-[3px] rounded-full"
+          style={{ background: '#b5824e', height: '100%', transformOrigin: 'bottom' }}
+          animate={{ scaleY: [scale, 1, scale * 0.5, scale] }}
+          transition={{ duration: 1.2 + i * 0.15, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      ))}
+    </div>
+  )
+}
 
 /* ─── Main Component ─── */
 export default function Home() {
+  const { prenom } = useUserStore()
   const heroRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, 120])
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, 80])
   const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0])
 
   return (
     <div className="min-h-screen">
-      {/* ═══ HERO SECTION ═══ */}
-      <section ref={heroRef} className="relative overflow-hidden" style={{ minHeight: '75vh' }}>
+
+      {/* ═══ SECTION 1 — HERO (compact, impactful) ═══ */}
+      <section ref={heroRef} className="relative overflow-hidden" style={{ maxHeight: '55vh', minHeight: '55vh' }}>
         {/* Background Gradient */}
-        <motion.div
-          className="absolute inset-0"
-          style={{ y: heroY }}
-        >
+        <motion.div className="absolute inset-0" style={{ y: heroY }}>
           <div className="absolute inset-0" style={{
             background: `
               radial-gradient(ellipse 80% 60% at 50% 40%, rgba(181,130,78,0.12) 0%, transparent 60%),
@@ -77,48 +61,30 @@ export default function Home() {
               #050505
             `,
           }} />
-          {/* Decorative circles */}
-          <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full opacity-[0.03]" style={{ background: 'radial-gradient(circle, #b5824e, transparent 70%)' }} />
-          <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full opacity-[0.02]" style={{ background: 'radial-gradient(circle, #c49a62, transparent 70%)' }} />
+          {/* Fulani pattern overlay */}
+          <FulaniPattern />
         </motion.div>
 
         <motion.div
           className="relative z-10 section-padding content-max flex flex-col items-center justify-center text-center"
-          style={{ minHeight: '75vh', opacity: heroOpacity }}
+          style={{ minHeight: '55vh', opacity: heroOpacity }}
         >
-          {/* Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8"
-            style={{
-              background: 'rgba(181,130,78,0.1)',
-              border: '1px solid rgba(181,130,78,0.2)',
-            }}
-          >
-            <span className="w-2 h-2 rounded-full" style={{ background: '#4ade80', animation: 'pulse 2.5s infinite' }} />
-            <span className="text-xs font-medium" style={{ color: 'rgba(245,240,234,0.7)' }}>
-              <AnimatedCounter target={1247} duration={2000} /> inscrits en ligne
-            </span>
-          </motion.div>
-
-          {/* Main Title */}
+          {/* Main Title — Light weight for contrast */}
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="text-hero max-w-3xl"
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            style={{ fontWeight: 300, fontSize: 'clamp(48px, 8vw, 80px)', lineHeight: 1.05, color: '#f5f0ea' }}
           >
-            Moussa, <span style={{ color: '#b5824e' }}>A jaraama</span>
+            {prenom || 'Salam'}, <span style={{ color: '#b5824e' }}>A jaraama</span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-5 text-body max-w-xl"
-            style={{ fontSize: 'clamp(15px, 2vw, 18px)' }}
+            transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-4 max-w-lg"
+            style={{ fontSize: 'clamp(14px, 1.8vw, 16px)', color: 'rgba(245,240,234,0.5)' }}
           >
             Decouvre ta culture, apprends le Pulaar et connecte-toi a la communaute Peule mondiale.
           </motion.p>
@@ -127,53 +93,16 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="flex flex-wrap items-center justify-center gap-4 mt-10"
+            transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-wrap items-center justify-center gap-4 mt-8"
           >
             <Link to="/quiz" className="btn-primary">Commencer le Quiz</Link>
             <Link to="/academy" className="btn-outline">Apprendre le Pulaar</Link>
           </motion.div>
-
-          {/* Stat Row */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
-            className="flex flex-wrap items-center justify-center gap-6 md:gap-10 mt-14"
-          >
-            {[
-              { label: 'Quiz Score', value: '90%' },
-              { label: 'Academy', value: '25%' },
-              { label: 'Yettore', value: 'Diallubhe' },
-            ].map((s) => (
-              <div key={s.label} className="text-center">
-                <p className="text-2xl md:text-3xl font-bold" style={{ color: '#f5f0ea' }}>{s.value}</p>
-                <p className="text-xs mt-1" style={{ color: 'rgba(245,240,234,0.4)' }}>{s.label}</p>
-              </div>
-            ))}
-          </motion.div>
-        </motion.div>
-
-        {/* Scroll indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5, duration: 1 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
-        >
-          <span className="text-xs" style={{ color: 'rgba(245,240,234,0.3)' }}>Explorer</span>
-          <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-            className="w-5 h-8 rounded-full border-2 flex items-start justify-center pt-1.5"
-            style={{ borderColor: 'rgba(245,240,234,0.15)' }}
-          >
-            <div className="w-1 h-1.5 rounded-full" style={{ background: 'rgba(245,240,234,0.3)' }} />
-          </motion.div>
         </motion.div>
       </section>
 
-      {/* ═══ RUBRIQUES GRID ═══ */}
+      {/* ═══ SECTION 2 — BENTO GRID (asymmetric rubriques) ═══ */}
       <section className="section-padding section-gap">
         <div className="content-max">
           <ScrollReveal>
@@ -184,178 +113,264 @@ export default function Home() {
             </p>
           </ScrollReveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
-            {rubriques.map((r, i) => (
-              <ScrollReveal key={r.to} delay={i * 0.06}>
-                <Link
-                  to={r.to}
-                  className="surface-card card-hover block p-6 md:p-7 group"
-                >
-                  <div className="flex items-start gap-4">
-                    <div
-                      className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
-                      style={{ background: r.color }}
-                    >
-                      {r.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-h3 group-hover:text-[#b5824e] transition-colors duration-300">{r.title}</h3>
-                      <p className="text-small mt-1.5">{r.desc}</p>
-                      <span
-                        className="inline-block mt-3 px-3 py-1 rounded-full text-xs font-medium"
-                        style={{ background: 'rgba(245,240,234,0.04)', color: 'rgba(245,240,234,0.5)' }}
-                      >
-                        {r.stat}
-                      </span>
-                    </div>
+          {/* Bento Grid — asymmetric layout */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+            {/* Row 1: Quiz (2 cols) + Academy (1 col) */}
+            <ScrollReveal delay={0} className="md:col-span-2">
+              <Link
+                to="/quiz"
+                className="surface-card card-hover block p-7 md:p-9 group relative overflow-hidden h-full"
+                style={{ minHeight: 200, background: 'linear-gradient(135deg, rgba(181,130,78,0.1), rgba(181,130,78,0.03))' }}
+              >
+                <div className="absolute top-4 right-4 opacity-[0.06]">
+                  <IconQuestion size={120} />
+                </div>
+                <div className="relative z-10">
+                  <div
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110"
+                    style={{ background: 'rgba(181,130,78,0.15)' }}
+                  >
+                    <IconQuestion size={28} />
                   </div>
-                </Link>
-              </ScrollReveal>
-            ))}
+                  <h3 className="text-h2 group-hover:text-[#b5824e] transition-colors duration-300">Quiz</h3>
+                  <p className="text-body mt-2 max-w-sm">Teste tes connaissances sur la culture Peule</p>
+                  <span
+                    className="inline-block mt-4 px-3 py-1 rounded-full text-xs font-medium"
+                    style={{ background: 'rgba(245,240,234,0.04)', color: 'rgba(245,240,234,0.5)' }}
+                  >
+                    100 questions
+                  </span>
+                </div>
+              </Link>
+            </ScrollReveal>
+
+            <ScrollReveal delay={0.06}>
+              <Link
+                to="/academy"
+                className="surface-card card-hover block p-6 md:p-7 group h-full"
+                style={{ minHeight: 200 }}
+              >
+                <div
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110"
+                  style={{ background: 'rgba(181,130,78,0.08)' }}
+                >
+                  <IconBook size={24} />
+                </div>
+                <h3 className="text-h3 group-hover:text-[#b5824e] transition-colors duration-300">Academy</h3>
+                <p className="text-small mt-1.5">Apprends le Pulaar pas a pas</p>
+                <span
+                  className="inline-block mt-3 px-3 py-1 rounded-full text-xs font-medium"
+                  style={{ background: 'rgba(245,240,234,0.04)', color: 'rgba(245,240,234,0.5)' }}
+                >
+                  13 lecons
+                </span>
+              </Link>
+            </ScrollReveal>
+
+            {/* Row 2: Music + Kitchen + Yettore (1 col each) */}
+            <ScrollReveal delay={0.12}>
+              <Link
+                to="/music"
+                className="surface-card card-hover block p-6 md:p-7 group relative overflow-hidden h-full"
+                style={{ minHeight: 180, background: 'linear-gradient(160deg, #0c0b09, #080706)' }}
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
+                    style={{ background: 'rgba(181,130,78,0.08)' }}
+                  >
+                    <IconRadio size={24} />
+                  </div>
+                  <EqBars />
+                </div>
+                <h3 className="text-h3 group-hover:text-[#b5824e] transition-colors duration-300">Music</h3>
+                <p className="text-small mt-1.5">Ecoute la playlist 100% Pulaar</p>
+                <span
+                  className="inline-block mt-3 px-3 py-1 rounded-full text-xs font-medium"
+                  style={{ background: 'rgba(245,240,234,0.04)', color: 'rgba(245,240,234,0.5)' }}
+                >
+                  10 titres
+                </span>
+              </Link>
+            </ScrollReveal>
+
+            <ScrollReveal delay={0.18}>
+              <Link
+                to="/kitchen"
+                className="surface-card card-hover block p-6 md:p-7 group h-full"
+                style={{
+                  minHeight: 180,
+                  background: 'linear-gradient(160deg, rgba(181,130,78,0.06), transparent)',
+                }}
+              >
+                <div
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110"
+                  style={{ background: 'rgba(245,158,11,0.08)' }}
+                >
+                  <IconPot size={24} />
+                </div>
+                <h3 className="text-h3 group-hover:text-[#b5824e] transition-colors duration-300">Kitchen</h3>
+                <p className="text-small mt-1.5">Decouvre les recettes traditionnelles Peules</p>
+                <span
+                  className="inline-block mt-3 px-3 py-1 rounded-full text-xs font-medium"
+                  style={{ background: 'rgba(245,240,234,0.04)', color: 'rgba(245,240,234,0.5)' }}
+                >
+                  8 recettes
+                </span>
+              </Link>
+            </ScrollReveal>
+
+            <ScrollReveal delay={0.24}>
+              <Link
+                to="/yettore"
+                className="surface-card card-hover block p-6 md:p-7 group h-full"
+                style={{ minHeight: 180 }}
+              >
+                <div
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110"
+                  style={{ background: 'rgba(59,130,246,0.08)' }}
+                >
+                  <IconBaobab size={24} />
+                </div>
+                <h3 className="text-h3 group-hover:text-[#b5824e] transition-colors duration-300">Yettore</h3>
+                <p className="text-small mt-1.5">Decouvre ton patronyme et ta lignee</p>
+                <span
+                  className="inline-block mt-3 px-3 py-1 rounded-full text-xs font-medium"
+                  style={{ background: 'rgba(245,240,234,0.04)', color: 'rgba(245,240,234,0.5)' }}
+                >
+                  10 familles
+                </span>
+              </Link>
+            </ScrollReveal>
+
+            {/* Row 3: Peul & Fier (1 col) + PeulNation (2 cols) */}
+            <ScrollReveal delay={0.3}>
+              <Link
+                to="/peul-fier"
+                className="surface-card card-hover block p-6 md:p-7 group h-full"
+                style={{ minHeight: 180 }}
+              >
+                <div
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110"
+                  style={{ background: 'rgba(244,63,94,0.08)' }}
+                >
+                  <IconStars size={24} />
+                </div>
+                <h3 className="text-h3 group-hover:text-[#b5824e] transition-colors duration-300">Peul & Fier</h3>
+                <p className="text-small mt-1.5">Les grandes personnalites de la culture Peule</p>
+                <span
+                  className="inline-block mt-3 px-3 py-1 rounded-full text-xs font-medium"
+                  style={{ background: 'rgba(245,240,234,0.04)', color: 'rgba(245,240,234,0.5)' }}
+                >
+                  6 figures
+                </span>
+              </Link>
+            </ScrollReveal>
+
+            <ScrollReveal delay={0.36} className="md:col-span-2">
+              <Link
+                to="/peulnation"
+                className="surface-card card-hover block p-7 md:p-9 group relative overflow-hidden h-full"
+                style={{ minHeight: 180 }}
+              >
+                {/* Subtle globe in background */}
+                <div className="absolute bottom-2 right-4 opacity-[0.04]">
+                  <IconGlobe size={140} />
+                </div>
+                <div className="relative z-10">
+                  <div
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110"
+                    style={{ background: 'rgba(34,211,238,0.08)' }}
+                  >
+                    <IconGlobe size={28} />
+                  </div>
+                  <h3 className="text-h2 group-hover:text-[#b5824e] transition-colors duration-300">PeulNation</h3>
+                  <p className="text-body mt-2 max-w-md">La presence Peule dans le monde</p>
+                  <span
+                    className="inline-block mt-4 px-3 py-1 rounded-full text-xs font-medium"
+                    style={{ background: 'rgba(245,240,234,0.04)', color: 'rgba(245,240,234,0.5)' }}
+                  >
+                    15+ pays
+                  </span>
+                </div>
+              </Link>
+            </ScrollReveal>
+
           </div>
         </div>
       </section>
 
-      {/* ═══ CULTURE DU JOUR ═══ */}
-      <section
-        className="relative overflow-hidden"
-        style={{
-          background: 'linear-gradient(180deg, rgba(181,130,78,0.04) 0%, rgba(181,130,78,0.02) 50%, transparent 100%)',
-          borderTop: '1px solid rgba(181,130,78,0.06)',
-          borderBottom: '1px solid rgba(181,130,78,0.06)',
-        }}
-      >
-        <div className="section-padding section-gap content-max">
+      {/* ═══ SECTION 3 — QUICK ACCESS (horizontal scroll pills) ═══ */}
+      <section className="py-6">
+        <div className="content-max px-4 md:px-8">
           <ScrollReveal>
-            <div className="max-w-2xl mx-auto text-center">
-              <div className="flex items-center justify-center gap-3 mb-6">
-                <span className="text-label px-3 py-1.5 rounded-lg" style={{ background: 'rgba(181,130,78,0.12)' }}>
-                  Culture du jour
-                </span>
-                <span className="px-2.5 py-1 rounded-md text-xs font-medium" style={{ background: 'rgba(74,222,128,0.1)', color: '#4ade80' }}>
-                  Nouveau
-                </span>
-              </div>
-              <p className="text-body md:text-lg leading-relaxed" style={{ color: 'rgba(245,240,234,0.65)' }}>
-                Les Peuls representent l'un des plus grands groupes ethniques d'Afrique,
-                presents dans plus de 15 pays. Leur tradition pastorale et leur code moral
-                (pulaaku) sont au coeur de leur identite.
-              </p>
+            <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              <style>{`.quick-scroll::-webkit-scrollbar { display: none; }`}</style>
+              <Link
+                to="/academy"
+                className="quick-scroll flex items-center gap-2.5 px-5 py-3 rounded-full whitespace-nowrap transition-colors duration-200 hover:bg-[rgba(181,130,78,0.12)]"
+                style={{
+                  border: '1px solid rgba(181,130,78,0.25)',
+                  color: '#f5f0ea',
+                  background: 'rgba(181,130,78,0.05)',
+                }}
+              >
+                <IconBook size={16} />
+                <span className="text-sm font-medium">Reprendre ma lecon</span>
+              </Link>
+              <Link
+                to="/quiz"
+                className="quick-scroll flex items-center gap-2.5 px-5 py-3 rounded-full whitespace-nowrap transition-colors duration-200 hover:bg-[rgba(181,130,78,0.12)]"
+                style={{
+                  border: '1px solid rgba(181,130,78,0.25)',
+                  color: '#f5f0ea',
+                  background: 'rgba(181,130,78,0.05)',
+                }}
+              >
+                <IconQuestion size={16} />
+                <span className="text-sm font-medium">Quiz du jour</span>
+              </Link>
+              <Link
+                to="/music"
+                className="quick-scroll flex items-center gap-2.5 px-5 py-3 rounded-full whitespace-nowrap transition-colors duration-200 hover:bg-[rgba(181,130,78,0.12)]"
+                style={{
+                  border: '1px solid rgba(181,130,78,0.25)',
+                  color: '#f5f0ea',
+                  background: 'rgba(181,130,78,0.05)',
+                }}
+              >
+                <IconPlay size={16} />
+                <span className="text-sm font-medium">Ecouter</span>
+              </Link>
             </div>
           </ScrollReveal>
         </div>
       </section>
 
-      {/* ═══ STATS COUNTER ═══ */}
-      <section className="section-padding section-gap">
-        <div className="content-max">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-            {stats.map((s, i) => (
-              <ScrollReveal key={s.label} delay={i * 0.1}>
-                <div className="text-center py-6">
-                  <p className="text-4xl md:text-5xl lg:text-6xl font-extrabold" style={{ color: '#f5f0ea' }}>
-                    <AnimatedCounter target={s.value} suffix={s.suffix} duration={1800} />
-                  </p>
-                  <p className="text-small mt-3">{s.label}</p>
-                </div>
-              </ScrollReveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ FEATURED: KITCHEN ═══ */}
-      <section className="relative overflow-hidden" style={{ minHeight: 360 }}>
-        <div className="absolute inset-0" style={{
-          background: 'linear-gradient(135deg, rgba(26,18,6,0.6) 0%, transparent 60%)',
-        }} />
-        <div className="section-padding content-max relative z-10">
-          <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16 py-16 md:py-24">
-            <ScrollReveal className="flex-1" direction="left">
-              <span className="text-label">Decouvrir</span>
-              <h2 className="text-h2 mt-3">Pulaar Kitchen</h2>
-              <p className="text-body mt-4 max-w-md">
-                Explore les recettes traditionnelles peules, du thiakry au laciri en passant par le kosam.
-              </p>
-              <Link to="/kitchen" className="btn-primary mt-8">
-                Voir les recettes
-              </Link>
-            </ScrollReveal>
-            <ScrollReveal className="flex-1 flex justify-center" direction="right">
-              <div
-                className="w-full max-w-sm aspect-[4/3] rounded-3xl overflow-hidden"
-                style={{
-                  background: 'linear-gradient(135deg, #1a1206, #0c0b09)',
-                  border: '1px solid rgba(181,130,78,0.1)',
-                  boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
-                }}
-              >
-                <div className="w-full h-full flex items-center justify-center">
-                  <IconPot size={80} />
-                </div>
-              </div>
-            </ScrollReveal>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ FEATURED: MUSIC ═══ */}
-      <section className="relative overflow-hidden" style={{ minHeight: 360 }}>
-        <div className="absolute inset-0" style={{
-          background: 'linear-gradient(225deg, rgba(13,15,6,0.4) 0%, transparent 60%)',
-        }} />
-        <div className="section-padding content-max relative z-10">
-          <div className="flex flex-col-reverse md:flex-row items-center gap-8 md:gap-16 py-16 md:py-24">
-            <ScrollReveal className="flex-1 flex justify-center" direction="left">
-              <div
-                className="w-48 h-48 md:w-64 md:h-64 rounded-full flex items-center justify-center"
-                style={{
-                  background: 'radial-gradient(circle, rgba(181,130,78,0.12), rgba(181,130,78,0.03))',
-                  border: '2px solid rgba(181,130,78,0.15)',
-                  boxShadow: '0 0 60px rgba(181,130,78,0.1)',
-                  animation: 'glowPulse 4s infinite',
-                }}
-              >
-                <IconPlay size={48} />
-              </div>
-            </ScrollReveal>
-            <ScrollReveal className="flex-1" direction="right">
-              <span className="text-label">Ecouter</span>
-              <h2 className="text-h2 mt-3">Pulaar Music</h2>
-              <p className="text-body mt-4 max-w-md">
-                Ta playlist 100% pulaar. Les plus beaux morceaux de la culture Peule, de Baaba Maal a Oumou Sangare.
-              </p>
-              <Link to="/music" className="btn-primary mt-8">
-                <IconPlay size={16} />
-                Lancer la playlist
-              </Link>
-            </ScrollReveal>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ ACADEMY CTA ═══ */}
+      {/* ═══ SECTION 4 — ACADEMY CTA (compact) ═══ */}
       <section className="section-padding section-gap">
         <div className="content-max">
           <ScrollReveal>
             <div
-              className="rounded-3xl p-8 md:p-14 text-center relative overflow-hidden"
+              className="rounded-3xl p-8 md:p-12 text-center relative overflow-hidden"
               style={{
                 background: 'linear-gradient(135deg, rgba(181,130,78,0.08), rgba(181,130,78,0.03))',
                 border: '1px solid rgba(181,130,78,0.1)',
               }}
             >
               {/* Glow */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[200px] opacity-20"
-                style={{ background: 'radial-gradient(ellipse, #b5824e, transparent 70%)' }} />
-
+              <div
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[150px] opacity-20"
+                style={{ background: 'radial-gradient(ellipse, #b5824e, transparent 70%)' }}
+              />
               <div className="relative z-10">
                 <span className="text-label">Pulaar Academy</span>
-                <h2 className="text-h2 mt-4">Apprends le Pulaar</h2>
-                <p className="text-body mt-4 max-w-md mx-auto">
-                  13 lecons progressives pour maitriser les bases du Pulaar. Du debutant au courant.
+                <h2 className="text-h2 mt-3">Apprends le Pulaar</h2>
+                <p className="text-body mt-3 max-w-md mx-auto">
+                  13 lecons progressives pour maitriser les bases du Pulaar.
                 </p>
-                <div className="flex flex-wrap justify-center gap-4 mt-8">
+                <div className="flex flex-wrap justify-center gap-4 mt-7">
                   <Link to="/academy" className="btn-primary">Commencer les lecons</Link>
                   <Link to="/quiz" className="btn-outline">Tester mon niveau</Link>
                 </div>

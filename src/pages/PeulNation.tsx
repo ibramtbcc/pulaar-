@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import SplashScreen from '../components/shared/SplashScreen'
 import { IconGlobe } from '../components/shared/Icons'
@@ -27,23 +27,17 @@ const diaspora = [
   { r: 6, cc: 'de', n: 'Allemagne', v: 28000, p: '' },
 ]
 
-function flag(cc: string) { return cc.toUpperCase().replace(/./g, (c) => String.fromCodePoint(0x1F1E6 - 65 + c.charCodeAt(0))) }
 function fmt(n: number) { if (n >= 1e6) return (n / 1e6).toFixed(1).replace('.', ',') + ' M'; if (n >= 1e3) return Math.round(n / 1e3) + ' K'; return String(n) }
 
-function AnimCounter({ target, suffix = '' }: { target: number; suffix?: string }) {
-  const ref = useRef<HTMLSpanElement>(null)
-  useEffect(() => {
-    const el = ref.current; if (!el) return
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
-        const start = performance.now()
-        function a(now: number) { const p = Math.min((now - start) / 2500, 1); el!.textContent = (((1 - Math.pow(1 - p, 3)) * target)).toFixed(1).replace('.', ',') + suffix; if (p < 1) requestAnimationFrame(a) }
-        requestAnimationFrame(a); observer.disconnect()
-      }
-    }, { threshold: 0.3 })
-    observer.observe(el); return () => observer.disconnect()
-  }, [target, suffix])
-  return <span ref={ref}>0{suffix}</span>
+function CountryBadge({ cc }: { cc: string }) {
+  return (
+    <span
+      className="inline-flex items-center justify-center w-10 h-7 rounded-md text-xs font-bold uppercase tracking-wide"
+      style={{ background: 'rgba(181,130,78,0.1)', color: '#b5824e', border: '1px solid rgba(181,130,78,0.15)' }}
+    >
+      {cc}
+    </span>
+  )
 }
 
 export default function PeulNation() {
@@ -64,20 +58,6 @@ export default function PeulNation() {
           <div className="amber-line mx-auto md:mx-0" />
           <h1 className="text-hero">PeulNation</h1>
           <p className="text-body mt-3 max-w-lg mx-auto md:mx-0">La presence Peule dans le monde.</p>
-        </div>
-      </section>
-
-      {/* Big counter */}
-      <section className="section-padding pb-8">
-        <div className="content-max">
-          <ScrollReveal>
-            <div className="text-center py-8 md:py-12">
-              <p className="text-5xl md:text-7xl lg:text-8xl font-black" style={{ color: '#f5f0ea' }}>
-                + de <AnimCounter target={45} suffix=" M" />
-              </p>
-              <p className="text-body mt-3">de Peuls dans le monde</p>
-            </div>
-          </ScrollReveal>
         </div>
       </section>
 
@@ -105,7 +85,7 @@ export default function PeulNation() {
                 <div className="surface-card card-hover flex items-center gap-4 py-4 px-5 md:px-6"
                   style={i === 0 ? { background: 'rgba(181,130,78,0.06)', border: '1px solid rgba(181,130,78,0.12)' } : {}}>
                   <span className="text-xs font-bold w-5 text-center" style={{ color: i < 3 ? '#b5824e' : 'rgba(245,240,234,0.3)' }}>{c.r}</span>
-                  <span className="text-2xl">{flag(c.cc)}</span>
+                  <CountryBadge cc={c.cc} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold" style={{ color: '#f5f0ea' }}>{c.n}</p>
                     <div className="flex items-center gap-2 mt-1.5">

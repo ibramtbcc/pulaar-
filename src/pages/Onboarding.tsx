@@ -1,11 +1,15 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import Logo from '../components/shared/Logo'
 import { IconMale, IconFemale } from '../components/shared/Icons'
 import GrainOverlay from '../components/shared/GrainOverlay'
+import { useUserStore } from '../stores/userStore'
+import avatarsData from '../data/avatars.json'
 
 type Step = 'splash' | 'login' | 'genre' | 'avatar' | 'profil' | 'welcome'
+
+const STEPS: Step[] = ['splash', 'login', 'genre', 'avatar', 'profil']
 
 const countries = [
   'Guinee', 'Senegal', 'Mali', 'Mauritanie', 'Cameroun',
@@ -15,17 +19,53 @@ const countries = [
 const levels = ['Debutant', 'Intermediaire', 'Courant']
 const sources = ['Facebook', 'Instagram', 'TikTok', 'Snapchat', 'Bouche a oreille']
 
+function getAvatarSrc(b64: string): string {
+  if (b64.startsWith('data:')) return b64
+  return `data:image/jpeg;base64,${b64}`
+}
+
+function ProgressBar({ currentStep }: { currentStep: Step }) {
+  const idx = STEPS.indexOf(currentStep)
+  if (currentStep === 'welcome') return null
+
+  return (
+    <div className="absolute top-0 left-0 right-0 z-10 flex gap-1.5 px-8 pt-4">
+      {STEPS.map((s, i) => (
+        <div
+          key={s}
+          className="flex-1 h-1 rounded-full transition-all duration-500"
+          style={{
+            background: i <= idx
+              ? '#b5824e'
+              : 'rgba(245,240,234,0.08)',
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
 export default function Onboarding() {
   const navigate = useNavigate()
+  const { isOnboarded, setField, completeOnboarding } = useUserStore()
+
   const [step, setStep] = useState<Step>('splash')
   const [genre, setGenre] = useState<'gorko' | 'debbo' | null>(null)
-  const [avatarIdx, setAvatarIdx] = useState<number | null>(null)
+  const [avatarKey, setAvatarKey] = useState<string | null>(null)
   const [prenom, setPrenom] = useState('')
   const [nom, setNom] = useState('')
   const [paysRacine, setPaysRacine] = useState('')
   const [niveau, setNiveau] = useState('')
   const [selectedSources, setSelectedSources] = useState<string[]>([])
 
+  // Redirect if already onboarded
+  useEffect(() => {
+    if (isOnboarded) {
+      navigate('/', { replace: true })
+    }
+  }, [isOnboarded, navigate])
+
+  // Splash auto-advance
   useEffect(() => {
     if (step === 'splash') {
       const timer = setTimeout(() => setStep('login'), 3000)
@@ -33,10 +73,28 @@ export default function Onboarding() {
     }
   }, [step])
 
+  // Get first 6 avatar entries
+  const avatarEntries = useMemo(() => {
+    const entries = Object.entries(avatarsData as Record<string, { b64: string }>)
+    return entries.slice(0, 6)
+  }, [])
+
   const toggleSource = (s: string) => {
     setSelectedSources((prev) =>
       prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
     )
+  }
+
+  const handleComplete = () => {
+    setField('prenom', prenom)
+    setField('nom', nom)
+    setField('genre', genre)
+    setField('avatarId', avatarKey)
+    setField('paysRacine', paysRacine)
+    setField('niveauPulaar', niveau)
+    setField('source', selectedSources)
+    completeOnboarding()
+    navigate('/')
   }
 
   const slideVariants = {
@@ -49,6 +107,8 @@ export default function Onboarding() {
     <div className="fixed inset-0 flex items-center justify-center" style={{ background: '#050505' }}>
       <GrainOverlay />
       <div className="w-full max-w-md h-full flex flex-col relative overflow-hidden">
+        <ProgressBar currentStep={step} />
+
         <AnimatePresence mode="wait">
           {/* SPLASH */}
           {step === 'splash' && (
@@ -184,17 +244,21 @@ export default function Onboarding() {
                 Choisis ton avatar Peul
               </h2>
               <div className="grid grid-cols-3 gap-4 mb-8">
-                {[0, 1, 2, 3, 4].map((i) => (
+                {avatarEntries.map(([key, avatar]) => (
                   <button
-                    key={i}
-                    onClick={() => setAvatarIdx(i)}
-                    className="relative w-20 h-20 rounded-full transition-all active:scale-95"
+                    key={key}
+                    onClick={() => setAvatarKey(key)}
+                    className="relative w-20 h-20 rounded-full transition-all active:scale-95 overflow-hidden"
                     style={{
-                      background: 'linear-gradient(135deg, rgba(181,130,78,0.2), rgba(181,130,78,0.05))',
-                      border: avatarIdx === i ? '3px solid #b5824e' : '2px solid rgba(245,240,234,0.08)',
+                      border: avatarKey === key ? '3px solid #b5824e' : '2px solid rgba(245,240,234,0.08)',
                     }}
                   >
-                    {avatarIdx === i && (
+                    <img
+                      src={getAvatarSrc(avatar.b64)}
+                      alt={key}
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                    {avatarKey === key && (
                       <span
                         className="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center"
                         style={{ background: '#b5824e' }}
@@ -207,11 +271,11 @@ export default function Onboarding() {
               </div>
               <button
                 onClick={() => setStep('profil')}
-                disabled={avatarIdx === null}
+                disabled={avatarKey === null}
                 className="w-full py-4 rounded-2xl font-semibold transition-all active:scale-[0.97]"
                 style={{
-                  background: avatarIdx !== null ? 'linear-gradient(135deg, #b5824e, #9a6d3c)' : 'rgba(245,240,234,0.06)',
-                  color: avatarIdx !== null ? '#050505' : 'rgba(245,240,234,0.3)',
+                  background: avatarKey !== null ? 'linear-gradient(135deg, #b5824e, #9a6d3c)' : 'rgba(245,240,234,0.06)',
+                  color: avatarKey !== null ? '#050505' : 'rgba(245,240,234,0.3)',
                   fontSize: 15,
                 }}
               >
@@ -359,7 +423,7 @@ export default function Onboarding() {
             >
               <Logo size={48} />
               <h2 style={{ fontSize: 24, fontWeight: 700, color: '#f5f0ea', marginTop: 24, textAlign: 'center' }}>
-                Bissilemilema, sois le bienvenu(e)
+                {prenom}, bissilemilema !
               </h2>
               <p style={{
                 fontSize: 16,
@@ -376,7 +440,7 @@ export default function Onboarding() {
               </p>
 
               <button
-                onClick={() => navigate('/')}
+                onClick={handleComplete}
                 className="w-full py-4 rounded-2xl font-semibold mt-12 transition-all active:scale-[0.97]"
                 style={{
                   background: 'linear-gradient(135deg, #d4a24e, #b5824e)',

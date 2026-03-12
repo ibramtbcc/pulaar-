@@ -5,12 +5,14 @@ import { IconPot, IconBack, IconHeart } from '../components/shared/Icons'
 import ScrollReveal from '../components/shared/ScrollReveal'
 import { useIsTablet } from '../hooks/useMediaQuery'
 import recipesData from '../data/recipes.json'
+import foodPhotos from '../data/food.json'
 
 interface Recipe {
   name: string; namePl: string; cat: string; time: string; diff: string; pers: string; desc: string; ingredients: string[]; steps: string[]
 }
 
 const recipes = Object.entries(recipesData as Record<string, Recipe>)
+const photos = foodPhotos as Record<string, string>
 
 export default function Kitchen() {
   const isTablet = useIsTablet()
@@ -68,20 +70,37 @@ export default function Kitchen() {
                 <button
                   onClick={() => { setOpenRecipe(id); setRecipeTab('ing') }}
                   className="relative rounded-2xl overflow-hidden text-left w-full card-hover group"
-                  style={{ height: 220 }}
+                  style={{ height: 280 }}
                 >
-                  <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, #1a150e ${i * 5}%, #0c0b09 60%, #080706 100%)` }} />
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, transparent 30%, rgba(5,5,5,0.95) 100%)' }} />
+                  {/* Food photo background */}
+                  {photos[id] && (
+                    <div
+                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                      style={{ backgroundImage: `url(${photos[id]})` }}
+                    />
+                  )}
+                  {/* Gradient overlay for readability */}
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(5,5,5,0.15) 0%, rgba(5,5,5,0.3) 40%, rgba(5,5,5,0.85) 100%)' }} />
+
                   {/* Time badge */}
                   <div className="absolute top-3 left-3">
-                    <span className="px-3 py-1.5 rounded-lg text-xs font-medium" style={{ background: 'rgba(5,5,5,0.6)', backdropFilter: 'blur(8px)', color: 'rgba(245,240,234,0.7)' }}>
+                    <span
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium"
+                      style={{ background: 'rgba(5,5,5,0.6)', backdropFilter: 'blur(8px)', color: 'rgba(245,240,234,0.85)' }}
+                    >
                       {recipe.time}
                     </span>
                   </div>
-                  {/* Fav */}
-                  <button className="absolute top-3 right-3 p-2 hover:scale-110 transition-transform" onClick={(e) => { e.stopPropagation(); toggleFav(id) }}>
-                    <IconHeart size={18} filled={favorites.has(id)} />
+
+                  {/* Favorite button */}
+                  <button
+                    className="absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center hover:scale-110 transition-transform"
+                    style={{ background: 'rgba(5,5,5,0.5)', backdropFilter: 'blur(8px)' }}
+                    onClick={(e) => { e.stopPropagation(); toggleFav(id) }}
+                  >
+                    <IconHeart size={16} filled={favorites.has(id)} />
                   </button>
+
                   {/* Info */}
                   <div className="absolute bottom-0 left-0 right-0 p-5">
                     <h3 className="text-h3 group-hover:text-[#b5824e] transition-colors">{recipe.name}</h3>
@@ -94,7 +113,7 @@ export default function Kitchen() {
         </div>
       </section>
 
-      {/* Recipe Modal — Desktop: centered overlay, Mobile: full slide */}
+      {/* Recipe Modal -- Desktop: centered overlay, Mobile: full slide */}
       <AnimatePresence>
         {openRecipe && openRecipeData && (
           <>
@@ -121,16 +140,34 @@ export default function Kitchen() {
               }`}
               style={{ background: '#050505', border: isTablet ? '1px solid rgba(245,240,234,0.08)' : 'none' }}
             >
-              {/* Hero */}
-              <div className="relative" style={{ height: isTablet ? 200 : 280 }}>
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #1a150e 0%, #0c0b09 100%)' }} />
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, transparent 30%, #050505 100%)' }} />
+              {/* Hero with food photo */}
+              <div className="relative" style={{ height: isTablet ? 240 : 300 }}>
+                {/* Food photo */}
+                {photos[openRecipe] && (
+                  <div
+                    className="absolute inset-0 bg-cover bg-center"
+                    style={{ backgroundImage: `url(${photos[openRecipe]})` }}
+                  />
+                )}
+                {/* Gradient overlay */}
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(5,5,5,0.2) 0%, rgba(5,5,5,0.4) 50%, #050505 100%)' }} />
+
+                {/* Back button */}
                 <button
                   onClick={() => setOpenRecipe(null)}
                   className="absolute top-4 left-4 w-10 h-10 rounded-full flex items-center justify-center z-10 hover:scale-110 transition-transform"
                   style={{ background: 'rgba(5,5,5,0.5)', backdropFilter: 'blur(8px)' }}
                 >
                   <IconBack size={18} />
+                </button>
+
+                {/* Favorite button in modal */}
+                <button
+                  className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center z-10 hover:scale-110 transition-transform"
+                  style={{ background: 'rgba(5,5,5,0.5)', backdropFilter: 'blur(8px)' }}
+                  onClick={() => toggleFav(openRecipe)}
+                >
+                  <IconHeart size={18} filled={favorites.has(openRecipe)} />
                 </button>
               </div>
 
