@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import SplashScreen from '../components/shared/SplashScreen'
 import { IconGlobe } from '../components/shared/Icons'
+import ScrollReveal from '../components/shared/ScrollReveal'
+import { useIsTablet } from '../hooks/useMediaQuery'
 
 const countries = [
   { r: 1, cc: 'ng', n: 'Nigeria', v: 20500000, p: '~9%' },
@@ -25,134 +27,105 @@ const diaspora = [
   { r: 6, cc: 'de', n: 'Allemagne', v: 28000, p: '' },
 ]
 
-function flag(cc: string) {
-  return cc.toUpperCase().replace(/./g, (c) =>
-    String.fromCodePoint(0x1F1E6 - 65 + c.charCodeAt(0))
-  )
-}
-
-function fmt(n: number) {
-  if (n >= 1e6) return (n / 1e6).toFixed(1).replace('.', ',') + ' M'
-  if (n >= 1e3) return Math.round(n / 1e3) + ' K'
-  return String(n)
-}
+function flag(cc: string) { return cc.toUpperCase().replace(/./g, (c) => String.fromCodePoint(0x1F1E6 - 65 + c.charCodeAt(0))) }
+function fmt(n: number) { if (n >= 1e6) return (n / 1e6).toFixed(1).replace('.', ',') + ' M'; if (n >= 1e3) return Math.round(n / 1e3) + ' K'; return String(n) }
 
 function AnimCounter({ target, suffix = '' }: { target: number; suffix?: string }) {
   const ref = useRef<HTMLSpanElement>(null)
   useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const start = performance.now()
-    function a(now: number) {
-      const p = Math.min((now - start) / 2500, 1)
-      const eased = 1 - Math.pow(1 - p, 3)
-      el.textContent = (eased * target).toFixed(1).replace('.', ',') + suffix
-      if (p < 1) requestAnimationFrame(a)
-    }
-    requestAnimationFrame(a)
+    const el = ref.current; if (!el) return
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        const start = performance.now()
+        function a(now: number) { const p = Math.min((now - start) / 2500, 1); el!.textContent = (((1 - Math.pow(1 - p, 3)) * target)).toFixed(1).replace('.', ',') + suffix; if (p < 1) requestAnimationFrame(a) }
+        requestAnimationFrame(a); observer.disconnect()
+      }
+    }, { threshold: 0.3 })
+    observer.observe(el); return () => observer.disconnect()
   }, [target, suffix])
   return <span ref={ref}>0{suffix}</span>
 }
 
 export default function PeulNation() {
-  const [showSplash, setShowSplash] = useState(true)
+  const isTablet = useIsTablet()
+  const [showSplash, setShowSplash] = useState(!isTablet)
   const [tab, setTab] = useState<'population' | 'diaspora'>('population')
 
-  const maxVal = countries[0].v
   const data = tab === 'population' ? countries : diaspora
-  const dMaxVal = tab === 'diaspora' ? diaspora[0].v : maxVal
+  const dMaxVal = data[0].v
 
-  if (showSplash) {
-    return (
-      <SplashScreen
-        icon={<IconGlobe size={120} />}
-        title="PeulNation"
-        onComplete={() => setShowSplash(false)}
-      />
-    )
-  }
+  if (showSplash) return <SplashScreen icon={<IconGlobe size={120} />} title="PeulNation" onComplete={() => setShowSplash(false)} />
 
   return (
-    <div className="min-h-screen px-5 pt-6 pb-24">
-      <h1 style={{ fontSize: 28, fontWeight: 800, color: '#f5f0ea', marginBottom: 4 }}>
-        PeulNation
-      </h1>
-      <p style={{ fontSize: 14, color: 'rgba(245,240,234,0.5)', marginBottom: 8 }}>
-        Les Peuls dans le monde
-      </p>
+    <div className="min-h-screen">
+      {/* Hero */}
+      <section className="section-padding pt-12 md:pt-20 pb-6">
+        <div className="content-max text-center md:text-left">
+          <div className="amber-line mx-auto md:mx-0" />
+          <h1 className="text-hero">PeulNation</h1>
+          <p className="text-body mt-3 max-w-lg mx-auto md:mx-0">La presence Peule dans le monde.</p>
+        </div>
+      </section>
 
-      {/* Total counter */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center py-6 mb-6"
-      >
-        <p style={{ fontSize: 40, fontWeight: 900, color: '#f5f0ea' }}>
-          + de <AnimCounter target={45} suffix=" M" />
-        </p>
-        <p style={{ fontSize: 14, color: 'rgba(245,240,234,0.4)' }}>de Peuls dans le monde</p>
-      </motion.div>
+      {/* Big counter */}
+      <section className="section-padding pb-8">
+        <div className="content-max">
+          <ScrollReveal>
+            <div className="text-center py-8 md:py-12">
+              <p className="text-5xl md:text-7xl lg:text-8xl font-black" style={{ color: '#f5f0ea' }}>
+                + de <AnimCounter target={45} suffix=" M" />
+              </p>
+              <p className="text-body mt-3">de Peuls dans le monde</p>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
 
-      {/* Tabs */}
-      <div className="flex gap-2 mb-6">
-        {(['population', 'diaspora'] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className="flex-1 py-3 rounded-xl transition-all"
-            style={{
-              background: tab === t ? 'rgba(181,130,78,0.15)' : 'rgba(245,240,234,0.04)',
-              border: tab === t ? '1px solid rgba(181,130,78,0.3)' : '0.5px solid rgba(245,240,234,0.06)',
-              color: tab === t ? '#b5824e' : 'rgba(245,240,234,0.5)',
-              fontSize: 14,
-              fontWeight: 600,
-              textTransform: 'capitalize' as const,
-            }}
-          >
-            {t}
-          </button>
-        ))}
-      </div>
+      <section className="section-padding pb-24 md:pb-16">
+        <div className="content-max">
+          {/* Tabs */}
+          <div className="flex gap-2 mb-8">
+            {(['population', 'diaspora'] as const).map((t) => (
+              <button key={t} onClick={() => setTab(t)}
+                className="px-5 py-3 rounded-xl transition-all text-sm font-semibold capitalize"
+                style={{
+                  background: tab === t ? 'rgba(181,130,78,0.15)' : 'rgba(245,240,234,0.04)',
+                  border: tab === t ? '1px solid rgba(181,130,78,0.3)' : '0.5px solid rgba(245,240,234,0.06)',
+                  color: tab === t ? '#b5824e' : 'rgba(245,240,234,0.5)',
+                }}>
+                {t}
+              </button>
+            ))}
+          </div>
 
-      {/* Country list */}
-      <div className="flex flex-col gap-2">
-        {data.map((c, i) => (
-          <motion.div
-            key={c.cc}
-            initial={{ opacity: 0, x: -12 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.04, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="flex items-center gap-3 py-3 px-4 rounded-xl"
-            style={{
-              background: i === 0 ? 'rgba(181,130,78,0.06)' : 'rgba(245,240,234,0.02)',
-              border: i === 0 ? '1px solid rgba(181,130,78,0.12)' : '0.5px solid rgba(245,240,234,0.04)',
-            }}
-          >
-            <span style={{ fontSize: 12, fontWeight: 700, color: i < 3 ? '#b5824e' : 'rgba(245,240,234,0.3)', minWidth: 20, textAlign: 'center' }}>
-              {c.r}
-            </span>
-            <span style={{ fontSize: 24 }}>{flag(c.cc)}</span>
-            <div className="flex-1 min-w-0">
-              <p style={{ fontSize: 14, fontWeight: 600, color: '#f5f0ea' }}>{c.n}</p>
-              <div className="flex items-center gap-2 mt-1">
-                <div className="flex-1 rounded-full overflow-hidden h-1.5" style={{ background: 'rgba(245,240,234,0.06)' }}>
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${(c.v / dMaxVal) * 100}%` }}
-                    transition={{ delay: 0.3 + i * 0.04, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                    className="h-full rounded-full"
-                    style={{ background: 'linear-gradient(90deg, #b5824e, #c49a62)' }}
-                  />
+          {/* Country grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+            {data.map((c, i) => (
+              <ScrollReveal key={c.cc} delay={i * 0.04}>
+                <div className="surface-card card-hover flex items-center gap-4 py-4 px-5 md:px-6"
+                  style={i === 0 ? { background: 'rgba(181,130,78,0.06)', border: '1px solid rgba(181,130,78,0.12)' } : {}}>
+                  <span className="text-xs font-bold w-5 text-center" style={{ color: i < 3 ? '#b5824e' : 'rgba(245,240,234,0.3)' }}>{c.r}</span>
+                  <span className="text-2xl">{flag(c.cc)}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold" style={{ color: '#f5f0ea' }}>{c.n}</p>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <div className="flex-1 rounded-full overflow-hidden h-1.5" style={{ background: 'rgba(245,240,234,0.06)' }}>
+                        <motion.div initial={{ width: 0 }} whileInView={{ width: `${(c.v / dMaxVal) * 100}%` }}
+                          viewport={{ once: true }} transition={{ delay: 0.2 + i * 0.04, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                          className="h-full rounded-full" style={{ background: 'linear-gradient(90deg, #b5824e, #c49a62)' }} />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold" style={{ color: '#f5f0ea' }}>{fmt(c.v)}</p>
+                    {c.p && <p className="text-xs" style={{ color: 'rgba(245,240,234,0.3)' }}>{c.p}</p>}
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div className="text-right">
-              <p style={{ fontSize: 13, fontWeight: 700, color: '#f5f0ea' }}>{fmt(c.v)}</p>
-              {c.p && <p style={{ fontSize: 10, color: 'rgba(245,240,234,0.3)' }}>{c.p}</p>}
-            </div>
-          </motion.div>
-        ))}
-      </div>
+              </ScrollReveal>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   )
 }
