@@ -1,8 +1,12 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { NavLink, Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import Logo from '../shared/Logo'
 import { IconBaobab, IconStars, IconGlobe, IconUser } from '../shared/Icons'
+import { useUserStore } from '../../stores/userStore'
+import avatarsData from '../../data/avatars.json'
+
+const avatars = avatarsData as Record<string, { b64: string }>
 
 const mainNav = [
   { to: '/', label: 'Accueil' },
@@ -28,6 +32,13 @@ const allNavMobile = [
 export default function Header() {
   const [moreOpen, setMoreOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { avatarId } = useUserStore()
+
+  const avatarSrc = useMemo(() => {
+    if (!avatarId) return null
+    const entry = avatars[avatarId]
+    return entry?.b64 || null
+  }, [avatarId])
 
   return (
     <>
@@ -160,14 +171,18 @@ export default function Header() {
               </span>
             </div>
             <Link
-              to="/profil"
-              className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-105"
+              to="/"
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-105 overflow-hidden"
               style={{
-                background: 'linear-gradient(135deg, #b5824e, #8a6338)',
-                border: '1.5px solid rgba(181,130,78,0.3)',
+                background: avatarSrc ? 'transparent' : 'linear-gradient(135deg, #b5824e, #8a6338)',
+                border: '2px solid rgba(181,130,78,0.4)',
               }}
             >
-              <IconUser size={16} />
+              {avatarSrc ? (
+                <img src={avatarSrc} alt="" className="w-full h-full object-cover" draggable={false} />
+              ) : (
+                <IconUser size={16} />
+              )}
             </Link>
           </div>
         </div>
