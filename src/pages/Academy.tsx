@@ -65,7 +65,7 @@ export default function Academy() {
   const lessonData = openLesson !== null ? Object.values(lessons).flat().find((l) => l.id === openLesson) : null
 
   if (showSplash) {
-    return <SplashScreen icon={<img src={ic.book} alt="" className="w-[120px] h-[120px] object-contain" />} title="Pulaar Academy" onComplete={() => setShowSplash(false)} />
+    return <SplashScreen icon={<img src={ic.book} alt="" className="w-[180px] h-[180px] object-contain" />} title="Pulaar Academy" onComplete={() => setShowSplash(false)} />
   }
 
   /* ═══ LESSON DETAIL ═══ */

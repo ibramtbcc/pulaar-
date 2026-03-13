@@ -17,16 +17,54 @@ const personalities = [
   { id: 'macky', name: 'Macky Sall', domain: 'Politique', country: 'Senegal', bio: 'Ancien president de la Republique du Senegal (2012-2024) et ancien president de l\'Union Africaine. D\'origine peule du Fouta-Toro, il a marque la politique senegalaise et africaine.', quote: '"Le Senegal est debout."', color: '#b5824e' },
 ]
 
+/* Decorative quote mark SVG */
+function QuoteMark({ color }: { color: string }) {
+  return (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <path
+        d="M14 28c-3.3 0-6-2.7-6-6s2.7-6 6-6c.7 0 1.4.1 2 .4C14.3 11.6 10.5 8 6 8V4c7.7 0 14 6.3 14 14v12c0 2.2-1.8 4-4 4h-2zm20 0c-3.3 0-6-2.7-6-6s2.7-6 6-6c.7 0 1.4.1 2 .4C34.3 11.6 30.5 8 26 8V4c7.7 0 14 6.3 14 14v12c0 2.2-1.8 4-4 4h-2z"
+        fill={color}
+        opacity="0.15"
+      />
+    </svg>
+  )
+}
+
+/* Domain icon SVG */
+function DomainIcon({ domain, color }: { domain: string; color: string }) {
+  if (domain === 'Musique') {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5">
+        <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
+      </svg>
+    )
+  }
+  if (domain === 'Litterature') {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+      </svg>
+    )
+  }
+  // Politique / default
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5">
+      <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
+    </svg>
+  )
+}
+
 export default function PeulFier() {
   const isTablet = useIsTablet()
   const [showSplash, setShowSplash] = useState(!isTablet)
   const [openPerson, setOpenPerson] = useState<string | null>(null)
+  const [hoveredId, setHoveredId] = useState<string | null>(null)
   const person = openPerson ? personalities.find((p) => p.id === openPerson) : null
 
   if (showSplash) return <SplashScreen icon={<img src={ic.stars} alt="" className="w-[120px] h-[120px] object-contain" />} title="Peul & Fier" onComplete={() => setShowSplash(false)} />
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen relative" style={{ fontFamily: "'Outfit', sans-serif" }}>
       <section className="section-padding pt-12 md:pt-20 pb-8 md:pb-12">
         <div className="content-max">
           <div className="amber-line" />
@@ -38,27 +76,131 @@ export default function PeulFier() {
       <section className="section-padding pb-24 md:pb-16">
         <div className="content-max">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {personalities.map((p, i) => (
-              <ScrollReveal key={p.id} delay={i * 0.06}>
-                <button
-                  onClick={() => setOpenPerson(p.id)}
-                  className="rounded-2xl overflow-hidden relative text-left w-full card-hover group"
-                  style={{ height: 260 }}
-                >
-                  <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${p.color}15 0%, #0c0b09 100%)` }} />
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, transparent 30%, rgba(5,5,5,0.95) 100%)' }} />
-                  <div className="absolute top-4 left-4">
-                    <span className="px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ background: 'rgba(5,5,5,0.5)', backdropFilter: 'blur(8px)', color: p.color }}>
-                      {p.domain}
-                    </span>
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-5">
-                    <h3 className="text-h3 group-hover:text-[#b5824e] transition-colors">{p.name}</h3>
-                    <p className="text-small mt-1">{p.country}</p>
-                  </div>
-                </button>
-              </ScrollReveal>
-            ))}
+            {personalities.map((p, i) => {
+              const isHovered = hoveredId === p.id
+              return (
+                <ScrollReveal key={p.id} delay={i * 0.06}>
+                  <button
+                    onClick={() => setOpenPerson(p.id)}
+                    onMouseEnter={() => setHoveredId(p.id)}
+                    onMouseLeave={() => setHoveredId(null)}
+                    className="overflow-hidden relative text-left w-full group"
+                    style={{
+                      height: 320,
+                      borderRadius: 24,
+                      transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+                    }}
+                  >
+                    {/* Unique gradient background per person */}
+                    <div className="absolute inset-0" style={{
+                      background: `linear-gradient(160deg, ${p.color}18 0%, ${p.color}08 40%, #0c0b09 70%, #050505 100%)`,
+                    }} />
+
+                    {/* Subtle radial accent */}
+                    <div className="absolute inset-0" style={{
+                      background: `radial-gradient(ellipse at 30% 20%, ${p.color}12 0%, transparent 60%)`,
+                    }} />
+
+                    {/* Bottom gradient for text readability */}
+                    <div className="absolute inset-0" style={{
+                      background: 'linear-gradient(180deg, transparent 40%, rgba(5,5,5,0.8) 75%, rgba(5,5,5,0.95) 100%)',
+                    }} />
+
+                    {/* Large decorative first letter */}
+                    <div
+                      className="absolute top-4 right-4 select-none pointer-events-none"
+                      style={{
+                        fontSize: 120,
+                        fontWeight: 900,
+                        lineHeight: 1,
+                        color: p.color,
+                        opacity: 0.06,
+                        fontFamily: "'Outfit', sans-serif",
+                        transition: 'opacity 0.5s ease',
+                        ...(isHovered ? { opacity: 0.1 } : {}),
+                      }}
+                    >
+                      {p.name.charAt(0)}
+                    </div>
+
+                    {/* Geometric accent lines */}
+                    <div className="absolute top-0 left-0 w-full h-[1px]" style={{ background: `linear-gradient(90deg, ${p.color}30, transparent 60%)` }} />
+                    <div className="absolute top-0 left-0 h-full w-[1px]" style={{ background: `linear-gradient(180deg, ${p.color}20, transparent 50%)` }} />
+
+                    {/* Domain badge top-left */}
+                    <div className="absolute top-4 left-4 flex items-center gap-2">
+                      <span
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5"
+                        style={{ background: 'rgba(5,5,5,0.5)', backdropFilter: 'blur(8px)', color: p.color }}
+                      >
+                        <DomainIcon domain={p.domain} color={p.color} />
+                        {p.domain}
+                      </span>
+                    </div>
+
+                    {/* Country badge */}
+                    <div className="absolute top-4 right-4 z-10">
+                      <span
+                        className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider"
+                        style={{
+                          background: 'rgba(245,240,234,0.04)',
+                          backdropFilter: 'blur(8px)',
+                          border: '0.5px solid rgba(245,240,234,0.08)',
+                          color: 'rgba(245,240,234,0.5)',
+                        }}
+                      >
+                        {p.country}
+                      </span>
+                    </div>
+
+                    {/* Info at bottom with slide-up reveal on hover */}
+                    <div
+                      className="absolute bottom-0 left-0 right-0 p-5"
+                      style={{ transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)' }}
+                    >
+                      <h3
+                        className="font-bold text-lg"
+                        style={{
+                          color: '#f5f0ea',
+                          fontFamily: "'Outfit', sans-serif",
+                          transition: 'color 0.3s ease',
+                          ...(isHovered ? { color: p.color } : {}),
+                        }}
+                      >
+                        {p.name}
+                      </h3>
+
+                      {/* Quote preview (first ~50 chars) */}
+                      <p
+                        className="text-xs mt-2 italic leading-relaxed"
+                        style={{
+                          color: 'rgba(245,240,234,0.4)',
+                          transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+                          maxHeight: isHovered ? 60 : 0,
+                          opacity: isHovered ? 1 : 0,
+                          overflow: 'hidden',
+                        }}
+                      >
+                        {p.quote.length > 55 ? p.quote.slice(0, 55) + '...' : p.quote}
+                      </p>
+
+                      {/* "Decouvrir" text on hover */}
+                      <div
+                        className="flex items-center gap-1 mt-2"
+                        style={{
+                          transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+                          opacity: isHovered ? 1 : 0,
+                          transform: isHovered ? 'translateY(0)' : 'translateY(8px)',
+                        }}
+                      >
+                        <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: p.color }}>Decouvrir</span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={p.color} strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+                      </div>
+                    </div>
+                  </button>
+                </ScrollReveal>
+              )
+            })}
           </div>
         </div>
       </section>
@@ -80,30 +222,92 @@ export default function PeulFier() {
               className={`fixed z-50 overflow-y-auto ${isTablet ? 'inset-x-0 inset-y-0 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[650px] md:max-h-[85vh] md:rounded-3xl' : 'inset-0'}`}
               style={{ background: '#050505', border: isTablet ? '1px solid rgba(245,240,234,0.08)' : 'none' }}
             >
-              <div className="relative" style={{ height: isTablet ? 180 : 300 }}>
-                <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, ${person.color}20 0%, #050505 100%)` }} />
+              {/* Modal header with gradient */}
+              <div className="relative" style={{ height: isTablet ? 200 : 300 }}>
+                <div className="absolute inset-0" style={{ background: `linear-gradient(160deg, ${person.color}20 0%, ${person.color}08 40%, #050505 100%)` }} />
+                <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at 50% 30%, ${person.color}15 0%, transparent 60%)` }} />
+
+                {/* Large decorative letter in modal header */}
+                <div
+                  className="absolute bottom-0 right-8 select-none pointer-events-none"
+                  style={{
+                    fontSize: 180,
+                    fontWeight: 900,
+                    lineHeight: 0.8,
+                    color: person.color,
+                    opacity: 0.06,
+                    fontFamily: "'Outfit', sans-serif",
+                  }}
+                >
+                  {person.name.charAt(0)}
+                </div>
+
+                {/* Top line accent */}
+                <div className="absolute top-0 left-0 w-full h-[1px]" style={{ background: `linear-gradient(90deg, ${person.color}40, transparent 60%)` }} />
+
+                {/* Back button with Fermer */}
                 <button onClick={() => setOpenPerson(null)}
-                  className="absolute top-4 left-4 w-10 h-10 rounded-full flex items-center justify-center z-10 hover:scale-110 transition-transform"
+                  className="absolute top-4 left-4 flex items-center gap-2 px-3 pr-4 h-10 rounded-full z-10 hover:scale-105 transition-transform"
                   style={{ background: 'rgba(5,5,5,0.5)', backdropFilter: 'blur(8px)' }}>
                   <IconBack size={18} />
+                  <span className="text-xs font-medium" style={{ color: 'rgba(245,240,234,0.8)' }}>Fermer</span>
                 </button>
+
+                {/* Country badge in header */}
+                <div className="absolute top-4 right-4 z-10">
+                  <span
+                    className="px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider"
+                    style={{
+                      background: 'rgba(245,240,234,0.04)',
+                      border: '0.5px solid rgba(245,240,234,0.1)',
+                      color: 'rgba(245,240,234,0.6)',
+                    }}
+                  >
+                    {person.country}
+                  </span>
+                </div>
               </div>
 
               <div className="px-6 md:px-8 -mt-20 relative z-10 pb-24 md:pb-10">
-                <span className="inline-block px-3 py-1.5 rounded-lg mb-3 text-xs font-semibold"
+                {/* Domain badge */}
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-3 text-xs font-semibold"
                   style={{ background: `${person.color}15`, border: `1px solid ${person.color}30`, color: person.color }}>
+                  <DomainIcon domain={person.domain} color={person.color} />
                   {person.domain}
                 </span>
                 <h2 className="text-h2">{person.name}</h2>
-                <p className="text-body mt-1">{person.country}</p>
 
-                <div className="mt-6">
+                {/* Domaine section */}
+                <div className="flex items-center gap-3 mt-4 px-4 py-3 rounded-xl" style={{ background: 'rgba(245,240,234,0.03)' }}>
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${person.color}15` }}>
+                    <DomainIcon domain={person.domain} color={person.color} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: 'rgba(245,240,234,0.4)' }}>Domaine</p>
+                    <p className="text-sm font-bold" style={{ color: '#f5f0ea' }}>{person.domain}</p>
+                  </div>
+                </div>
+
+                {/* Biography */}
+                <div className="mt-8">
                   <h3 className="text-h3 mb-3">Biographie</h3>
                   <p className="text-body leading-relaxed">{person.bio}</p>
                 </div>
 
-                <div className="mt-6 rounded-2xl p-5" style={{ background: `${person.color}08`, border: `1px solid ${person.color}15` }}>
-                  <p className="text-body italic" style={{ color: '#f5f0ea' }}>{person.quote}</p>
+                {/* Decorative quote block */}
+                <div className="mt-8 rounded-2xl p-6 relative overflow-hidden" style={{ background: `${person.color}06`, border: `1px solid ${person.color}15` }}>
+                  {/* Large quote mark SVG */}
+                  <div className="absolute top-3 left-4">
+                    <QuoteMark color={person.color} />
+                  </div>
+
+                  {/* Subtle gradient accent in quote block */}
+                  <div className="absolute top-0 left-0 w-1 h-full rounded-full" style={{ background: `linear-gradient(180deg, ${person.color}60, ${person.color}10)` }} />
+
+                  <div className="relative pl-4 pt-6">
+                    <p className="text-body italic leading-relaxed" style={{ color: '#f5f0ea', fontSize: 16 }}>{person.quote}</p>
+                    <p className="text-xs mt-3 font-semibold" style={{ color: person.color }}>-- {person.name}</p>
+                  </div>
                 </div>
               </div>
             </motion.div>

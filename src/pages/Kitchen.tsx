@@ -17,6 +17,100 @@ interface Recipe {
 const recipes = Object.entries(recipesData as Record<string, Recipe>)
 const photos = foodPhotos as Record<string, string>
 
+/* ── Recipe Card Component ── */
+function RecipeCard({
+  id, recipe, height, fullWidth, isFav, onOpen, onToggleFav
+}: {
+  id: string; recipe: Recipe; height: number; fullWidth: boolean; isFav: boolean
+  onOpen: () => void; onToggleFav: () => void
+}) {
+  return (
+    <button
+      onClick={onOpen}
+      className="relative overflow-hidden text-left w-full group"
+      style={{
+        height,
+        borderRadius: 22,
+        transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+      }}
+    >
+      {photos[id] && (
+        <div
+          className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+          style={{ backgroundImage: `url(${photos[id]})` }}
+        />
+      )}
+
+      {/* Netflix-style gradient overlay: 92% to 65% opacity */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: fullWidth
+            ? 'linear-gradient(180deg, rgba(5,5,5,0.08) 0%, rgba(5,5,5,0.15) 30%, rgba(5,5,5,0.65) 70%, rgba(5,5,5,0.92) 100%)'
+            : 'linear-gradient(180deg, rgba(5,5,5,0.10) 0%, rgba(5,5,5,0.20) 30%, rgba(5,5,5,0.65) 65%, rgba(5,5,5,0.92) 100%)',
+        }}
+      />
+
+      {/* Time badge + category badge */}
+      <div className="absolute top-3 left-3 flex items-center gap-2">
+        <span
+          className="px-3 py-1.5 rounded-lg text-xs font-medium"
+          style={{ background: 'rgba(5,5,5,0.6)', backdropFilter: 'blur(8px)', color: 'rgba(245,240,234,0.85)' }}
+        >
+          {recipe.time}
+        </span>
+        <span
+          className="px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide"
+          style={{
+            background: 'rgba(181,130,78,0.15)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(181,130,78,0.25)',
+            color: '#b5824e',
+          }}
+        >
+          {recipe.cat === 'plat' ? 'Plat' : 'Dessert'}
+        </span>
+      </div>
+
+      {/* Favorite button */}
+      <button
+        className="absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center hover:scale-110"
+        style={{
+          background: 'rgba(5,5,5,0.5)',
+          backdropFilter: 'blur(8px)',
+          transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+        }}
+        onClick={(e) => { e.stopPropagation(); onToggleFav() }}
+      >
+        <IconHeart size={16} filled={isFav} />
+      </button>
+
+      {/* Info at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 p-5">
+        <h3
+          className="font-bold group-hover:text-[#b5824e]"
+          style={{
+            fontSize: fullWidth ? 22 : 17,
+            color: '#f5f0ea',
+            fontFamily: "'Outfit', sans-serif",
+            transition: 'color 0.3s ease',
+          }}
+        >
+          {recipe.name}
+        </h3>
+        <p className="text-small mt-1" style={{ color: 'rgba(245,240,234,0.5)' }}>
+          {recipe.namePl} · {recipe.diff}
+        </p>
+        {fullWidth && (
+          <p className="text-sm mt-2" style={{ color: 'rgba(245,240,234,0.4)', lineHeight: 1.5 }}>
+            {recipe.desc.length > 80 ? recipe.desc.slice(0, 80) + '...' : recipe.desc}
+          </p>
+        )}
+      </div>
+    </button>
+  )
+}
+
 export default function Kitchen() {
   const isTablet = useIsTablet()
   const [showSplash, setShowSplash] = useState(!isTablet)
@@ -35,8 +129,62 @@ export default function Kitchen() {
     return <SplashScreen icon={<img src={ic.pot} alt="" className="w-[120px] h-[120px] object-contain" />} title="Pulaar Kitchen" onComplete={() => setShowSplash(false)} />
   }
 
+  // Build alternating layout: 1 big card + 2 small side by side, repeat
+  const renderAlternatingGrid = () => {
+    const items = filtered
+    const elements: JSX.Element[] = []
+    let idx = 0
+
+    while (idx < items.length) {
+      // Big card (full width)
+      const [bigId, bigRecipe] = items[idx]
+      elements.push(
+        <ScrollReveal key={bigId} delay={idx * 0.06}>
+          <RecipeCard
+            id={bigId}
+            recipe={bigRecipe}
+            height={360}
+            fullWidth
+            isFav={favorites.has(bigId)}
+            onOpen={() => { setOpenRecipe(bigId); setRecipeTab('ing') }}
+            onToggleFav={() => toggleFav(bigId)}
+          />
+        </ScrollReveal>
+      )
+      idx++
+
+      // Two small cards side by side
+      if (idx < items.length) {
+        const smallPair: JSX.Element[] = []
+        for (let j = 0; j < 2 && idx < items.length; j++, idx++) {
+          const [smallId, smallRecipe] = items[idx]
+          smallPair.push(
+            <ScrollReveal key={smallId} delay={idx * 0.06}>
+              <RecipeCard
+                id={smallId}
+                recipe={smallRecipe}
+                height={240}
+                fullWidth={false}
+                isFav={favorites.has(smallId)}
+                onOpen={() => { setOpenRecipe(smallId); setRecipeTab('ing') }}
+                onToggleFav={() => toggleFav(smallId)}
+              />
+            </ScrollReveal>
+          )
+        }
+        elements.push(
+          <div key={`pair-${idx}`} className="grid grid-cols-2 gap-4">
+            {smallPair}
+          </div>
+        )
+      }
+    }
+
+    return elements
+  }
+
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen relative" style={{ fontFamily: "'Outfit', sans-serif" }}>
       {/* Hero */}
       <section className="section-padding pt-12 md:pt-20 pb-8 md:pb-12">
         <div className="content-max">
@@ -54,11 +202,12 @@ export default function Kitchen() {
               <button
                 key={tab}
                 onClick={() => setFilter(tab)}
-                className="px-5 py-2.5 rounded-xl transition-all text-sm font-semibold capitalize"
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold capitalize"
                 style={{
                   background: filter === tab ? 'rgba(181,130,78,0.15)' : 'rgba(245,240,234,0.04)',
                   border: filter === tab ? '1px solid rgba(181,130,78,0.3)' : '0.5px solid rgba(245,240,234,0.08)',
                   color: filter === tab ? '#b5824e' : 'rgba(245,240,234,0.5)',
+                  transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
                 }}
               >
                 {tab === 'tout' ? 'Tout' : tab === 'plat' ? 'Plats' : 'Desserts'}
@@ -66,61 +215,17 @@ export default function Kitchen() {
             ))}
           </div>
 
-          {/* Recipe Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
-            {filtered.map(([id, recipe], i) => (
-              <ScrollReveal key={id} delay={i * 0.06}>
-                <button
-                  onClick={() => { setOpenRecipe(id); setRecipeTab('ing') }}
-                  className="relative rounded-2xl overflow-hidden text-left w-full card-hover group"
-                  style={{ height: 280 }}
-                >
-                  {/* Food photo background */}
-                  {photos[id] && (
-                    <div
-                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                      style={{ backgroundImage: `url(${photos[id]})` }}
-                    />
-                  )}
-                  {/* Gradient overlay for readability */}
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(5,5,5,0.15) 0%, rgba(5,5,5,0.3) 40%, rgba(5,5,5,0.85) 100%)' }} />
-
-                  {/* Time badge */}
-                  <div className="absolute top-3 left-3">
-                    <span
-                      className="px-3 py-1.5 rounded-lg text-xs font-medium"
-                      style={{ background: 'rgba(5,5,5,0.6)', backdropFilter: 'blur(8px)', color: 'rgba(245,240,234,0.85)' }}
-                    >
-                      {recipe.time}
-                    </span>
-                  </div>
-
-                  {/* Favorite button */}
-                  <button
-                    className="absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center hover:scale-110 transition-transform"
-                    style={{ background: 'rgba(5,5,5,0.5)', backdropFilter: 'blur(8px)' }}
-                    onClick={(e) => { e.stopPropagation(); toggleFav(id) }}
-                  >
-                    <IconHeart size={16} filled={favorites.has(id)} />
-                  </button>
-
-                  {/* Info */}
-                  <div className="absolute bottom-0 left-0 right-0 p-5">
-                    <h3 className="text-h3 group-hover:text-[#b5824e] transition-colors">{recipe.name}</h3>
-                    <p className="text-small mt-1">{recipe.namePl} · {recipe.diff}</p>
-                  </div>
-                </button>
-              </ScrollReveal>
-            ))}
+          {/* Alternating Recipe Grid */}
+          <div className="flex flex-col gap-4 md:gap-6">
+            {renderAlternatingGrid()}
           </div>
         </div>
       </section>
 
-      {/* Recipe Modal -- Desktop: centered overlay, Mobile: full slide */}
+      {/* Recipe Modal */}
       <AnimatePresence>
         {openRecipe && openRecipeData && (
           <>
-            {/* Backdrop (desktop only) */}
             {isTablet && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -145,23 +250,22 @@ export default function Kitchen() {
             >
               {/* Hero with food photo */}
               <div className="relative" style={{ height: isTablet ? 240 : 300 }}>
-                {/* Food photo */}
                 {photos[openRecipe] && (
                   <div
                     className="absolute inset-0 bg-cover bg-center"
                     style={{ backgroundImage: `url(${photos[openRecipe]})` }}
                   />
                 )}
-                {/* Gradient overlay */}
                 <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(5,5,5,0.2) 0%, rgba(5,5,5,0.4) 50%, #050505 100%)' }} />
 
-                {/* Back button */}
+                {/* Back button with Fermer text */}
                 <button
                   onClick={() => setOpenRecipe(null)}
-                  className="absolute top-4 left-4 w-10 h-10 rounded-full flex items-center justify-center z-10 hover:scale-110 transition-transform"
+                  className="absolute top-4 left-4 flex items-center gap-2 px-3 pr-4 h-10 rounded-full z-10 hover:scale-105 transition-transform"
                   style={{ background: 'rgba(5,5,5,0.5)', backdropFilter: 'blur(8px)' }}
                 >
                   <IconBack size={18} />
+                  <span className="text-xs font-medium" style={{ color: 'rgba(245,240,234,0.8)' }}>Fermer</span>
                 </button>
 
                 {/* Favorite button in modal */}
@@ -172,6 +276,16 @@ export default function Kitchen() {
                 >
                   <IconHeart size={18} filled={favorites.has(openRecipe)} />
                 </button>
+
+                {/* Category badge in modal hero */}
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
+                  <span
+                    className="px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider"
+                    style={{ background: 'rgba(181,130,78,0.2)', border: '1px solid rgba(181,130,78,0.3)', color: '#b5824e' }}
+                  >
+                    {openRecipeData.cat === 'plat' ? 'Plat' : 'Dessert'}
+                  </span>
+                </div>
               </div>
 
               <div className="px-6 md:px-8 -mt-16 relative z-10 pb-24 md:pb-10">
@@ -199,11 +313,12 @@ export default function Kitchen() {
                     <button
                       key={tab}
                       onClick={() => setRecipeTab(tab)}
-                      className="flex-1 py-3 rounded-xl transition-all text-sm font-semibold"
+                      className="flex-1 py-3 rounded-xl text-sm font-semibold"
                       style={{
                         background: recipeTab === tab ? 'rgba(181,130,78,0.15)' : 'rgba(245,240,234,0.04)',
                         border: recipeTab === tab ? '1px solid rgba(181,130,78,0.3)' : '0.5px solid rgba(245,240,234,0.06)',
                         color: recipeTab === tab ? '#b5824e' : 'rgba(245,240,234,0.5)',
+                        transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                       }}
                     >
                       {tab === 'ing' ? 'Ingredients' : 'Preparation'}
@@ -212,9 +327,15 @@ export default function Kitchen() {
                 </div>
 
                 {recipeTab === 'ing' ? (
-                  <ul className="flex flex-col gap-2.5">
+                  <ul className="flex flex-col gap-0">
                     {openRecipeData.ingredients.map((ing: string, i: number) => (
-                      <li key={i} className="flex items-start gap-3 py-1">
+                      <li
+                        key={i}
+                        className="flex items-start gap-3 px-4 py-3 rounded-xl"
+                        style={{
+                          background: i % 2 === 0 ? 'rgba(245,240,234,0.03)' : 'transparent',
+                        }}
+                      >
                         <span className="w-2 h-2 rounded-full mt-2 flex-shrink-0" style={{ background: '#b5824e' }} />
                         <span className="text-body">{ing}</span>
                       </li>

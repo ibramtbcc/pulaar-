@@ -9,6 +9,37 @@ import icons from '../data/icons.json'
 
 const ic = icons as Record<string, string>
 
+/* Inline SVG icons for shuffle, repeat */
+function IconShuffle({ size = 20, active = false }: { size?: number; active?: boolean }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={active ? '#b5824e' : '#f5f0ea'} strokeWidth="1.5">
+      <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
+    </svg>
+  )
+}
+
+function IconRepeat({ size = 20, active = false }: { size?: number; active?: boolean }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={active ? '#b5824e' : '#f5f0ea'} strokeWidth="1.5">
+      <path d="M17 1l4 4-4 4" />
+      <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+      <path d="M7 23l-4-4 4-4" />
+      <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+    </svg>
+  )
+}
+
+/* Pulsing glow keyframes injected once */
+const glowStyle = `
+@keyframes albumPulseGlow {
+  0%, 100% { box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 20px rgba(181,130,78,0.08); }
+  50% { box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 40px rgba(181,130,78,0.2), 0 0 60px rgba(181,130,78,0.08); }
+}
+@keyframes albumIdleGlow {
+  0%, 100% { box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 10px rgba(181,130,78,0.04); }
+}
+`
+
 export default function Music() {
   const navigate = useNavigate()
   const isTablet = useIsTablet()
@@ -17,12 +48,26 @@ export default function Music() {
   const [playing, setPlaying] = useState(false)
   const [progress, setProgress] = useState(0)
   const [shuffle, setShuffle] = useState(false)
+  const [repeat, setRepeat] = useState(false)
   const [liked, setLiked] = useState<Set<number>>(new Set())
   const intervalRef = useRef<ReturnType<typeof setInterval>>()
 
   const track = tracks[current]
 
   const togglePlay = useCallback(() => setPlaying((p) => !p), [])
+
+  const nextTrack = useCallback(() => {
+    setProgress(0)
+    if (repeat) {
+      // restart same track
+      setPlaying(true)
+    } else {
+      setCurrent(shuffle ? Math.floor(Math.random() * tracks.length) : (c) => (c + 1) % tracks.length)
+    }
+  }, [shuffle, repeat])
+
+  const prevTrack = () => { setProgress(0); setCurrent((c) => (c - 1 + tracks.length) % tracks.length) }
+  const toggleLike = () => { setLiked((prev) => { const n = new Set(prev); if (n.has(current)) n.delete(current); else n.add(current); return n }) }
 
   useEffect(() => {
     if (playing) {
@@ -33,11 +78,7 @@ export default function Music() {
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
     return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
-  }, [playing, current])
-
-  const nextTrack = () => { setProgress(0); setCurrent(shuffle ? Math.floor(Math.random() * tracks.length) : (c) => (c + 1) % tracks.length) }
-  const prevTrack = () => { setProgress(0); setCurrent((c) => (c - 1 + tracks.length) % tracks.length) }
-  const toggleLike = () => { setLiked((prev) => { const n = new Set(prev); if (n.has(current)) n.delete(current); else n.add(current); return n }) }
+  }, [playing, current, nextTrack])
 
   const formatTime = (pct: number) => {
     const secs = Math.floor((pct / 100) * track.durationSec)
@@ -47,13 +88,44 @@ export default function Music() {
   if (showSplash) return <SplashScreen icon={<img src={ic.radio} alt="" className="w-[120px] h-[120px] object-contain" />} title="Pulaar Music" onComplete={() => setShowSplash(false)} />
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden" style={{ fontFamily: "'Outfit', sans-serif" }}>
+      {/* Inject glow animation */}
+      <style>{glowStyle}</style>
+
       {/* Background */}
       <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, #1a150e 0%, #0c0b09 40%, #050505 100%)' }} />
       <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 30%, rgba(181,130,78,0.08) 0%, transparent 60%)' }} />
 
       <div className="relative z-10 section-padding pt-6 md:pt-12 pb-24 md:pb-16">
         <div className="content-max">
+
+          {/* Now Playing mini bar */}
+          {playing && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-3 px-4 py-2.5 rounded-xl mb-6"
+              style={{ background: 'rgba(181,130,78,0.08)', border: '1px solid rgba(181,130,78,0.12)' }}
+            >
+              {/* Playing indicator bars */}
+              <div className="flex items-end gap-0.5 h-3">
+                {[1, 2, 3].map((b) => (
+                  <motion.div
+                    key={b}
+                    className="w-0.5 rounded-full"
+                    style={{ background: '#b5824e' }}
+                    animate={{ height: ['3px', '10px', '3px'] }}
+                    transition={{ duration: 0.7, repeat: Infinity, delay: b * 0.12 }}
+                  />
+                ))}
+              </div>
+              <span className="text-xs font-medium" style={{ color: '#b5824e' }}>En cours de lecture</span>
+              <span className="text-xs font-medium ml-1" style={{ color: 'rgba(245,240,234,0.5)' }}>
+                {track.title} - {track.artist}
+              </span>
+            </motion.div>
+          )}
+
           {/* Desktop: side-by-side layout */}
           <div className="flex flex-col lg:flex-row lg:items-start lg:gap-16">
             {/* Left: Player */}
@@ -65,7 +137,7 @@ export default function Music() {
                 <div className="w-8" />
               </div>
 
-              {/* Album art — dynamic visual */}
+              {/* Album art with pulsing border glow */}
               <motion.div
                 key={current}
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -73,7 +145,8 @@ export default function Music() {
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 className="w-64 h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 rounded-3xl relative overflow-hidden"
                 style={{
-                  border: '1px solid rgba(181,130,78,0.1)',
+                  border: playing ? '1px solid rgba(181,130,78,0.25)' : '1px solid rgba(181,130,78,0.1)',
+                  animation: playing ? 'albumPulseGlow 3s ease-in-out infinite' : 'none',
                   boxShadow: '0 24px 80px rgba(0,0,0,0.5)',
                 }}
               >
@@ -126,9 +199,13 @@ export default function Music() {
               </div>
 
               {/* Controls */}
-              <div className="flex items-center justify-center gap-6 mt-6">
-                <button onClick={() => setShuffle(!shuffle)} className="p-2 transition-opacity hover:scale-110" style={{ opacity: shuffle ? 1 : 0.4 }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f5f0ea" strokeWidth="1.5"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+              <div className="flex items-center justify-center gap-5 mt-6">
+                <button
+                  onClick={() => setShuffle(!shuffle)}
+                  className="p-2 hover:scale-110"
+                  style={{ opacity: shuffle ? 1 : 0.4, transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}
+                >
+                  <IconShuffle size={20} active={shuffle} />
                 </button>
                 <button onClick={prevTrack} className="p-2 hover:scale-110 active:scale-95 transition-transform"><IconSkipPrev size={28} /></button>
                 <button onClick={togglePlay} className="w-[72px] h-[72px] rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
@@ -136,11 +213,22 @@ export default function Music() {
                   {playing ? <IconPause size={32} /> : <IconPlay size={32} />}
                 </button>
                 <button onClick={nextTrack} className="p-2 hover:scale-110 active:scale-95 transition-transform"><IconSkipNext size={28} /></button>
-                <button onClick={toggleLike} className="p-2 transition-opacity hover:scale-110"><IconHeart size={20} filled={liked.has(current)} /></button>
+                <button
+                  onClick={() => setRepeat(!repeat)}
+                  className="p-2 hover:scale-110"
+                  style={{ opacity: repeat ? 1 : 0.4, transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}
+                >
+                  <IconRepeat size={20} active={repeat} />
+                </button>
               </div>
+
+              {/* Like button below controls */}
+              <button onClick={toggleLike} className="mt-4 p-2 hover:scale-110 transition-transform">
+                <IconHeart size={22} filled={liked.has(current)} />
+              </button>
             </div>
 
-            {/* Right: Playlist (all devices) */}
+            {/* Right: Playlist */}
             <div className="w-full lg:w-[380px] mt-10 lg:mt-4">
               <h3 className="text-label mb-4">Playlist</h3>
               <div className="flex flex-col gap-1">
@@ -148,7 +236,24 @@ export default function Music() {
                   <button
                     key={i}
                     onClick={() => { setCurrent(i); setProgress(0) }}
-                    className={`flex items-center gap-4 px-4 py-3 rounded-xl text-left transition-all hover:bg-[rgba(245,240,234,0.04)] ${i === current ? 'bg-[rgba(181,130,78,0.08)]' : ''}`}
+                    className="flex items-center gap-4 px-4 py-3 rounded-xl text-left group/item"
+                    style={{
+                      background: i === current ? 'rgba(181,130,78,0.08)' : 'transparent',
+                      borderLeft: i === current ? '4px solid #b5824e' : '4px solid transparent',
+                      transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (i !== current) {
+                        e.currentTarget.style.background = 'rgba(245,240,234,0.04)'
+                        e.currentTarget.style.borderLeft = '4px solid rgba(181,130,78,0.4)'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (i !== current) {
+                        e.currentTarget.style.background = 'transparent'
+                        e.currentTarget.style.borderLeft = '4px solid transparent'
+                      }
+                    }}
                   >
                     <span className="text-xs font-bold w-5 text-center" style={{ color: i === current ? '#b5824e' : 'rgba(245,240,234,0.3)' }}>{i + 1}</span>
                     <div className="flex-1 min-w-0">

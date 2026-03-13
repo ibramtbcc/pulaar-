@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -18,12 +19,6 @@
   --font-family-outfit: 'Outfit', sans-serif;
 }
 
-@font-face {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-display: swap;
-  src: url('https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800;900&display=swap');
-}
 
 :root {
   --bk: #050505;

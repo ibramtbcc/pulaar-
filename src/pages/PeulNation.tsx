@@ -29,7 +29,11 @@ const diaspora = [
   { r: 6, cc: 'de', n: 'Allemagne', v: 28000, p: '' },
 ]
 
-function fmt(n: number) { if (n >= 1e6) return (n / 1e6).toFixed(1).replace('.', ',') + ' M'; if (n >= 1e3) return Math.round(n / 1e3) + ' K'; return String(n) }
+function fmt(n: number) {
+  if (n >= 1e6) return (n / 1e6).toFixed(1).replace('.', ',') + ' M'
+  if (n >= 1e3) return Math.round(n / 1e3) + ' K'
+  return String(n)
+}
 
 function CountryBadge({ cc }: { cc: string }) {
   return (
@@ -65,46 +69,161 @@ export default function PeulNation() {
 
       <section className="section-padding pb-24 md:pb-16">
         <div className="content-max">
-          {/* Tabs */}
+          {/* Summary stat card */}
+          <ScrollReveal>
+            <div
+              className="rounded-3xl p-6 md:p-8 mb-8 text-center relative overflow-hidden"
+              style={{
+                background: 'rgba(181,130,78,0.04)',
+                border: '1px solid rgba(181,130,78,0.12)',
+              }}
+            >
+              <div
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[120px] opacity-10"
+                style={{ background: 'radial-gradient(ellipse, #b5824e, transparent 70%)' }}
+              />
+              <p className="text-label relative z-10 tracking-widest text-xs" style={{ color: 'rgba(245,240,234,0.5)' }}>
+                Estimation mondiale
+              </p>
+              <p
+                className="relative z-10 mt-3 font-black tracking-tight"
+                style={{
+                  fontSize: 'clamp(2.5rem, 6vw, 4rem)',
+                  lineHeight: 1,
+                  color: '#f5f0ea',
+                  fontFamily: 'Outfit, sans-serif',
+                }}
+              >
+                ~45
+                <span className="text-[0.5em] font-bold ml-1" style={{ color: '#b5824e' }}>
+                  millions
+                </span>
+              </p>
+              <p className="text-body mt-2 relative z-10" style={{ color: 'rgba(245,240,234,0.5)' }}>
+                de Peuls dans le monde
+              </p>
+            </div>
+          </ScrollReveal>
+
+          {/* Tabs — pill-shaped */}
           <div className="flex gap-2 mb-8">
             {(['population', 'diaspora'] as const).map((t) => (
-              <button key={t} onClick={() => setTab(t)}
-                className="px-5 py-3 rounded-xl transition-all text-sm font-semibold capitalize"
+              <motion.button
+                key={t}
+                onClick={() => setTab(t)}
+                className="px-6 py-3 transition-all text-sm font-semibold capitalize relative"
                 style={{
+                  borderRadius: '999px',
                   background: tab === t ? 'rgba(181,130,78,0.15)' : 'rgba(245,240,234,0.04)',
                   border: tab === t ? '1px solid rgba(181,130,78,0.3)' : '0.5px solid rgba(245,240,234,0.06)',
                   color: tab === t ? '#b5824e' : 'rgba(245,240,234,0.5)',
-                }}>
-                {t}
-              </button>
+                }}
+                whileTap={{ scale: 0.96 }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              >
+                {t === 'population' ? 'Population' : 'Diaspora'}
+                {tab === t && (
+                  <motion.div
+                    layoutId="peulnation-tab"
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                      background: 'rgba(181,130,78,0.08)',
+                      border: '1px solid rgba(181,130,78,0.2)',
+                    }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
+              </motion.button>
             ))}
           </div>
 
+          {/* Section header */}
+          <ScrollReveal>
+            <p
+              className="text-xs font-semibold uppercase tracking-[0.2em] mb-5"
+              style={{ color: 'rgba(245,240,234,0.35)' }}
+            >
+              {tab === 'population' ? 'Populations estimees' : 'Communautes en diaspora'}
+            </p>
+          </ScrollReveal>
+
           {/* Country grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-            {data.map((c, i) => (
-              <ScrollReveal key={c.cc} delay={i * 0.04}>
-                <div className="surface-card card-hover flex items-center gap-4 py-4 px-5 md:px-6"
-                  style={i === 0 ? { background: 'rgba(181,130,78,0.06)', border: '1px solid rgba(181,130,78,0.12)' } : {}}>
-                  <span className="text-xs font-bold w-5 text-center" style={{ color: i < 3 ? '#b5824e' : 'rgba(245,240,234,0.3)' }}>{c.r}</span>
-                  <CountryBadge cc={c.cc} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold" style={{ color: '#f5f0ea' }}>{c.n}</p>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <div className="flex-1 rounded-full overflow-hidden h-1.5" style={{ background: 'rgba(245,240,234,0.06)' }}>
-                        <motion.div initial={{ width: 0 }} whileInView={{ width: `${(c.v / dMaxVal) * 100}%` }}
-                          viewport={{ once: true }} transition={{ delay: 0.2 + i * 0.04, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                          className="h-full rounded-full" style={{ background: 'linear-gradient(90deg, #b5824e, #c49a62)' }} />
+            {data.map((c, i) => {
+              const isFirst = i === 0
+              return (
+                <ScrollReveal key={c.cc + tab} delay={i * 0.04}>
+                  <motion.div
+                    className="surface-card flex items-center gap-4 px-5 md:px-6 relative overflow-hidden transition-colors"
+                    style={{
+                      paddingTop: isFirst ? '1.25rem' : '1rem',
+                      paddingBottom: isFirst ? '1.25rem' : '1rem',
+                      background: isFirst ? 'rgba(181,130,78,0.06)' : undefined,
+                      border: isFirst ? '1px solid rgba(181,130,78,0.18)' : undefined,
+                      boxShadow: isFirst ? '0 0 40px rgba(181,130,78,0.06), inset 0 1px 0 rgba(181,130,78,0.08)' : undefined,
+                    }}
+                    whileHover={{
+                      y: -2,
+                      transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] },
+                    }}
+                  >
+                    {/* Amber glow for rank 1 */}
+                    {isFirst && (
+                      <div
+                        className="absolute top-0 left-0 w-full h-full opacity-[0.04] pointer-events-none"
+                        style={{ background: 'radial-gradient(ellipse at 30% 50%, #b5824e, transparent 70%)' }}
+                      />
+                    )}
+
+                    <span
+                      className="text-xs font-bold w-6 text-center relative z-10"
+                      style={{
+                        color: isFirst ? '#c49a62' : i < 3 ? '#b5824e' : 'rgba(245,240,234,0.3)',
+                        fontSize: isFirst ? '0.875rem' : undefined,
+                      }}
+                    >
+                      {c.r}
+                    </span>
+                    <CountryBadge cc={c.cc} />
+                    <div className="flex-1 min-w-0 relative z-10">
+                      <p
+                        className="font-semibold"
+                        style={{
+                          color: '#f5f0ea',
+                          fontSize: isFirst ? '0.9375rem' : '0.875rem',
+                        }}
+                      >
+                        {c.n}
+                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <div className="flex-1 rounded-full overflow-hidden" style={{ height: '3px', background: 'rgba(245,240,234,0.06)' }}>
+                          <motion.div
+                            initial={{ width: 0 }}
+                            whileInView={{ width: `${(c.v / dMaxVal) * 100}%` }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.2 + i * 0.04, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                            className="h-full rounded-full"
+                            style={{ background: 'linear-gradient(90deg, #b5824e, #c49a62)' }}
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold" style={{ color: '#f5f0ea' }}>{fmt(c.v)}</p>
-                    {c.p && <p className="text-xs" style={{ color: 'rgba(245,240,234,0.3)' }}>{c.p}</p>}
-                  </div>
-                </div>
-              </ScrollReveal>
-            ))}
+                    <div className="text-right relative z-10">
+                      <p
+                        className="font-bold"
+                        style={{
+                          color: '#f5f0ea',
+                          fontSize: isFirst ? '0.9375rem' : '0.875rem',
+                        }}
+                      >
+                        {fmt(c.v)}
+                      </p>
+                      {c.p && <p className="text-xs" style={{ color: 'rgba(245,240,234,0.3)' }}>{c.p}</p>}
+                    </div>
+                  </motion.div>
+                </ScrollReveal>
+              )
+            })}
           </div>
         </div>
       </section>
