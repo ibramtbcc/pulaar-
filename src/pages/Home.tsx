@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import ScrollReveal from '../components/shared/ScrollReveal'
+import { motion, useInView } from 'framer-motion'
+import { useRef } from 'react'
 import { useUserStore } from '../stores/userStore'
 import icons from '../data/icons.json'
 import foodPhotos from '../data/food.json'
@@ -27,32 +27,33 @@ function getYettore(nom: string): string {
   return key ? yettoreMap[key] : ''
 }
 
-/* ─── Fulani geometric SVG pattern ─── */
-function FulaniPattern({ opacity = 0.04 }: { opacity?: number }) {
+/* ─── Reveal wrapper (IntersectionObserver driven) ─── */
+function Reveal({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: '-40px' })
   return (
-    <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg" opacity={opacity}>
-      <defs>
-        <pattern id="fulani-home" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
-          <path d="M30 0L60 30L30 60L0 30Z" fill="none" stroke="#b5824e" strokeWidth="0.5" />
-          <path d="M30 10L50 30L30 50L10 30Z" fill="none" stroke="#b5824e" strokeWidth="0.3" />
-          <path d="M30 20L40 30L30 40L20 30Z" fill="none" stroke="#c49a62" strokeWidth="0.3" />
-        </pattern>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#fulani-home)" />
-    </svg>
+    <motion.div
+      ref={ref}
+      className={className}
+      initial={{ opacity: 0, y: 24 }}
+      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
+      transition={{ duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] }}
+    >
+      {children}
+    </motion.div>
   )
 }
 
-/* ─── Equalizer bars ─── */
+/* ─── Equalizer bars (Music card) ─── */
 function EqBars() {
   return (
-    <div className="flex items-end gap-[3px] h-6">
-      {[0.6, 1, 0.4, 0.8, 0.5].map((scale, i) => (
+    <div className="flex items-end gap-[2px] h-4">
+      {[0.6, 1, 0.4, 0.8, 0.5].map((s, i) => (
         <motion.div
           key={i}
-          className="w-[3px] rounded-full"
+          className="w-[2.5px] rounded-full"
           style={{ background: '#b5824e', height: '100%', transformOrigin: 'bottom' }}
-          animate={{ scaleY: [scale, 1, scale * 0.5, scale] }}
+          animate={{ scaleY: [s, 1, s * 0.4, s] }}
           transition={{ duration: 1.2 + i * 0.15, repeat: Infinity, ease: 'easeInOut' }}
         />
       ))}
@@ -60,31 +61,15 @@ function EqBars() {
   )
 }
 
-/* ─── Stat counter ─── */
-function StatCounter({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="text-center">
-      <div className="font-bold" style={{ fontSize: 28, color: '#f5f0ea', lineHeight: 1, fontFamily: "'Outfit', sans-serif" }}>
-        {value}
-      </div>
-      <div className="text-[11px] font-medium mt-1 uppercase tracking-wider" style={{ color: 'rgba(245,240,234,0.4)' }}>
-        {label}
-      </div>
-    </div>
-  )
-}
-
 /* ─── Arrow icon ─── */
-function ArrowRight() {
+function ArrowRight({ size = 14 }: { size?: number }) {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M5 12h14M12 5l7 7-7 7" />
     </svg>
   )
 }
 
-/* ═══════════════════════════════════════════ */
-/*               MAIN COMPONENT               */
 /* ═══════════════════════════════════════════ */
 export default function Home() {
   const { prenom, nom, avatarId, paysRacine, score } = useUserStore()
@@ -93,8 +78,7 @@ export default function Home() {
 
   const avatarSrc = useMemo(() => {
     if (!avatarId) return null
-    const entry = avatars[avatarId]
-    return entry?.b64 || null
+    return avatars[avatarId]?.b64 || null
   }, [avatarId])
 
   const kitchenPhoto = useMemo(() => {
@@ -104,722 +88,701 @@ export default function Home() {
     return keys.length > 0 ? photos[keys[0]] : null
   }, [])
 
-  const scoreDisplay = score > 0 ? `${Math.min(score, 100)}%` : '0%'
+  const displayName = prenom || 'Pullo'
+  const initial = displayName.charAt(0).toUpperCase()
+  const hasScore = score > 0
 
   return (
     <div className="min-h-screen pb-28 lg:pb-16">
 
-      {/* ═══ HERO SECTION ═══ */}
-      <section className="relative overflow-hidden">
-        {/* Background gradient */}
+      {/* ═══════════════════════════════════════ */}
+      {/*   SECTION 1 — HERO PROFIL              */}
+      {/* ═══════════════════════════════════════ */}
+      <section className="relative overflow-hidden" style={{ minHeight: 260 }}>
+        {/* Background — radial gradient subtil */}
         <div
           className="absolute inset-0"
-          style={{
-            background: 'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(181,130,78,0.15) 0%, rgba(181,130,78,0.04) 50%, transparent 80%)',
-          }}
+          style={{ background: 'radial-gradient(ellipse 70% 50% at 50% 20%, rgba(12,11,9,1) 0%, #050505 100%)' }}
         />
-        <div className="absolute inset-0">
-          <FulaniPattern opacity={0.025} />
-        </div>
 
-        <div className="relative z-10 max-w-[1100px] mx-auto px-5 md:px-8 pt-8 md:pt-12 pb-10 md:pb-14">
-          <ScrollReveal>
-            <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-10">
-              {/* Avatar */}
-              <motion.div
-                className="shrink-0"
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              >
+        <div className="relative z-10 max-w-[960px] mx-auto px-5 md:px-8 pt-10 md:pt-14 pb-8">
+          <Reveal>
+            <div className="flex items-center gap-5 md:gap-7">
+
+              {/* Avatar — 80px, amber ring, initials fallback */}
+              <div className="shrink-0 relative" style={{ width: 80, height: 80 }}>
                 <div
-                  className="relative"
-                  style={{ width: 100, height: 100 }}
+                  className="w-full h-full rounded-full overflow-hidden"
+                  style={{ border: '1.5px solid rgba(181,130,78,0.5)' }}
                 >
-                  {/* Glow ring */}
-                  <div
-                    className="absolute inset-[-4px] rounded-full"
-                    style={{
-                      background: 'conic-gradient(from 0deg, #b5824e, #c49a62, #b5824e)',
-                      opacity: 0.5,
-                      filter: 'blur(4px)',
-                    }}
-                  />
-                  <div
-                    className="relative w-full h-full rounded-full overflow-hidden"
-                    style={{
-                      border: '3px solid rgba(181,130,78,0.6)',
-                      background: 'rgba(181,130,78,0.1)',
-                    }}
-                  >
-                    {avatarSrc ? (
-                      <img src={avatarSrc} alt="" className="w-full h-full object-cover" draggable={false} />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#f5f0ea" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-                          <circle cx="12" cy="7" r="4" />
-                        </svg>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Greeting + info */}
-              <div className="flex-1 min-w-0">
-                <motion.div
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                >
-                  <h1
-                    className="font-bold"
-                    style={{
-                      fontSize: 'clamp(28px, 4vw, 42px)',
-                      color: '#f5f0ea',
-                      lineHeight: 1.15,
-                      fontFamily: "'Outfit', sans-serif",
-                      letterSpacing: '-0.02em',
-                    }}
-                  >
-                    Bissmillaay, <span style={{ color: '#b5824e' }}>{prenom || 'Pullo'}</span>
-                  </h1>
-
-                  {/* Badges row */}
-                  <div className="flex flex-wrap items-center gap-2 mt-3">
-                    {yettore && (
-                      <span
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
-                        style={{
-                          background: 'linear-gradient(135deg, rgba(181,130,78,0.15), rgba(181,130,78,0.08))',
-                          color: '#c49a62',
-                          border: '1px solid rgba(181,130,78,0.25)',
-                        }}
-                      >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="#b5824e" opacity="0.7">
-                          <path d="M12 2L15 8.5L22 9.3L17 14L18.2 21L12 17.5L5.8 21L7 14L2 9.3L9 8.5Z" />
-                        </svg>
-                        {yettore}
-                      </span>
-                    )}
-                    {paysRacine && (
-                      <span
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium"
-                        style={{
-                          background: 'rgba(245,240,234,0.05)',
-                          color: 'rgba(245,240,234,0.6)',
-                          border: '1px solid rgba(245,240,234,0.08)',
-                        }}
-                      >
-                        {paysRacine}
-                      </span>
-                    )}
-                    <span
-                      className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
-                      style={{
-                        background: 'linear-gradient(135deg, rgba(181,130,78,0.2), rgba(196,154,98,0.1))',
-                        color: '#b5824e',
-                        border: '1px solid rgba(181,130,78,0.3)',
-                      }}
+                  {avatarSrc ? (
+                    <img src={avatarSrc} alt="" className="w-full h-full object-cover" draggable={false} />
+                  ) : (
+                    <div
+                      className="w-full h-full flex items-center justify-center"
+                      style={{ background: '#0c0b09' }}
                     >
-                      Pullo confirme
-                    </span>
-                  </div>
-                </motion.div>
+                      <span style={{
+                        fontFamily: "'Outfit', sans-serif",
+                        fontWeight: 700,
+                        fontSize: 28,
+                        color: '#b5824e',
+                      }}>
+                        {initial}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Score card */}
-              <motion.div
-                className="shrink-0"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              >
-                <div
-                  className="px-6 py-4 rounded-2xl text-center"
+              {/* Name block */}
+              <div className="flex-1 min-w-0">
+                <h1
                   style={{
-                    background: 'linear-gradient(135deg, rgba(181,130,78,0.12), rgba(181,130,78,0.04))',
-                    border: '1px solid rgba(181,130,78,0.2)',
-                    minWidth: 110,
+                    fontFamily: "'Outfit', sans-serif",
+                    fontWeight: 800,
+                    fontSize: 'clamp(28px, 5vw, 40px)',
+                    color: '#f5f0ea',
+                    lineHeight: 1.1,
+                    letterSpacing: '-0.04em',
                   }}
                 >
-                  <div className="font-extrabold" style={{ fontSize: 32, color: '#b5824e', lineHeight: 1, fontFamily: "'Outfit', sans-serif" }}>
-                    {scoreDisplay}
+                  {displayName}{nom ? ` ${nom}` : ''}
+                </h1>
+
+                {/* Badges row */}
+                <div className="flex flex-wrap items-center gap-2 mt-3">
+                  {paysRacine && (
+                    <span style={{
+                      fontFamily: "'Outfit', sans-serif",
+                      fontSize: 12,
+                      fontWeight: 400,
+                      color: 'rgba(245,240,234,0.45)',
+                    }}>
+                      {paysRacine}
+                    </span>
+                  )}
+                  {paysRacine && yettore && (
+                    <span style={{ color: 'rgba(245,240,234,0.15)', fontSize: 10 }}>|</span>
+                  )}
+                  {yettore && (
+                    <span style={{
+                      fontFamily: "'Outfit', sans-serif",
+                      fontSize: 12,
+                      fontWeight: 500,
+                      color: 'rgba(181,130,78,0.7)',
+                    }}>
+                      {yettore}
+                    </span>
+                  )}
+                  {/* PULLO CONFIRME badge — ambre system, NOT green */}
+                  <span
+                    style={{
+                      fontFamily: "'Outfit', sans-serif",
+                      fontSize: 9,
+                      fontWeight: 500,
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase' as const,
+                      color: '#b5824e',
+                      background: 'rgba(181,130,78,0.08)',
+                      border: '0.5px solid rgba(181,130,78,0.2)',
+                      borderRadius: 20,
+                      padding: '3px 10px',
+                    }}
+                  >
+                    Pullo confirme
+                  </span>
+                </div>
+              </div>
+
+              {/* Score — integrated metric card, NOT a floating button */}
+              <div className="hidden sm:block shrink-0">
+                <div
+                  style={{
+                    background: '#0c0b09',
+                    border: '0.5px solid rgba(181,130,78,0.12)',
+                    borderRadius: 16,
+                    padding: '14px 20px',
+                    textAlign: 'center' as const,
+                    minWidth: 90,
+                  }}
+                >
+                  <div style={{
+                    fontFamily: "'Outfit', sans-serif",
+                    fontWeight: 800,
+                    fontSize: 28,
+                    color: hasScore ? '#b5824e' : 'rgba(245,240,234,0.15)',
+                    lineHeight: 1,
+                    letterSpacing: '-0.02em',
+                  }}>
+                    {hasScore ? `${Math.min(score, 100)}%` : '\u2013'}
                   </div>
-                  <div className="text-[10px] font-semibold mt-1 uppercase tracking-wider" style={{ color: 'rgba(245,240,234,0.4)' }}>
-                    Score Quiz
+                  <div style={{
+                    fontFamily: "'Outfit', sans-serif",
+                    fontSize: 9,
+                    fontWeight: 500,
+                    letterSpacing: '0.15em',
+                    textTransform: 'uppercase' as const,
+                    color: 'rgba(245,240,234,0.3)',
+                    marginTop: 4,
+                  }}>
+                    Score quiz
                   </div>
                 </div>
-              </motion.div>
-            </div>
-          </ScrollReveal>
-
-          {/* Stats bar */}
-          <ScrollReveal delay={0.12}>
-            <div
-              className="flex items-center justify-around mt-8 py-5 rounded-2xl"
-              style={{
-                background: 'rgba(12,11,9,0.6)',
-                border: '1px solid rgba(245,240,234,0.06)',
-                backdropFilter: 'blur(10px)',
-              }}
-            >
-              <StatCounter value="45M+" label="Peuls" />
-              <div className="w-px h-8" style={{ background: 'rgba(245,240,234,0.08)' }} />
-              <StatCounter value="1,247" label="Inscrits" />
-              <div className="w-px h-8" style={{ background: 'rgba(245,240,234,0.08)' }} />
-              <StatCounter value="15+" label="Pays" />
-              <div className="w-px h-8 hidden sm:block" style={{ background: 'rgba(245,240,234,0.08)' }} />
-              <div className="hidden sm:block">
-                <StatCounter value="8" label="Rubriques" />
               </div>
             </div>
-          </ScrollReveal>
+          </Reveal>
         </div>
-
-        {/* Bottom fade */}
-        <div
-          className="absolute bottom-0 left-0 right-0 h-16"
-          style={{ background: 'linear-gradient(to top, #050505, transparent)' }}
-        />
       </section>
 
-      {/* ═══ QUICK ACTIONS ═══ */}
-      <section className="max-w-[1100px] mx-auto px-5 md:px-8 -mt-2">
-        <ScrollReveal delay={0.1}>
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { to: '/academy', icon: ic.book, label: 'Reprendre ma lecon', sub: 'Lecon 3 - Salutations' },
-              { to: '/quiz', icon: ic.quiz, label: 'Quiz du jour', sub: '100 questions' },
-              { to: '/music', icon: ic.radio, label: 'Ecouter', sub: '10 titres Pulaar' },
-            ].map((item, i) => (
-              <Link
-                key={i}
-                to={item.to}
-                className="group flex flex-col items-center gap-3 p-4 md:p-5 rounded-2xl transition-all duration-300 hover:scale-[1.02]"
-                style={{
-                  background: 'rgba(12,11,9,0.8)',
-                  border: '1px solid rgba(245,240,234,0.06)',
-                }}
-              >
-                <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 overflow-hidden"
-                  style={{ background: 'rgba(181,130,78,0.1)' }}
-                >
-                  <img src={item.icon} alt="" className="w-7 h-7 object-contain" />
-                </div>
-                <div className="text-center">
-                  <div className="text-xs md:text-sm font-semibold" style={{ color: '#f5f0ea' }}>
-                    {item.label}
-                  </div>
-                  <div className="text-[10px] md:text-[11px] mt-0.5" style={{ color: 'rgba(245,240,234,0.4)' }}>
-                    {item.sub}
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </ScrollReveal>
-      </section>
-
-      {/* ═══ ACADEMY PROGRESS ═══ */}
-      <section className="max-w-[1100px] mx-auto px-5 md:px-8 mt-6">
-        <ScrollReveal delay={0.08}>
-          <Link
-            to="/academy"
-            className="block relative overflow-hidden group"
+      {/* ═══════════════════════════════════════ */}
+      {/*   SECTION 2 — METRIQUES (4 stats)      */}
+      {/* ═══════════════════════════════════════ */}
+      <section className="max-w-[960px] mx-auto px-5 md:px-8">
+        <Reveal delay={0.08}>
+          <div
             style={{
-              background: 'linear-gradient(135deg, rgba(181,130,78,0.1), rgba(181,130,78,0.03))',
-              borderRadius: 20,
-              border: '1px solid rgba(181,130,78,0.12)',
-              padding: '20px 24px',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              padding: '28px 0',
             }}
           >
-            <div className="flex items-center justify-between">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-2">
+            {[
+              { value: '45M+', label: 'Peuls' },
+              { value: '1,247', label: 'Inscrits' },
+              { value: '15+', label: 'Pays' },
+              { value: '8', label: 'Rubriques' },
+            ].map((stat, i) => (
+              <div
+                key={i}
+                className="text-center relative"
+              >
+                {i > 0 && (
                   <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden"
-                    style={{ background: 'rgba(181,130,78,0.12)' }}
-                  >
-                    <img src={ic.book} alt="" className="w-5 h-5 object-contain" />
-                  </div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#b5824e' }}>
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-px h-6"
+                    style={{ background: 'rgba(181,130,78,0.08)' }}
+                  />
+                )}
+                <div style={{
+                  fontFamily: "'Outfit', sans-serif",
+                  fontWeight: 800,
+                  fontSize: 'clamp(22px, 3vw, 32px)',
+                  color: '#f5f0ea',
+                  lineHeight: 1,
+                  letterSpacing: '-0.02em',
+                }}>
+                  {stat.value}
+                </div>
+                <div style={{
+                  fontFamily: "'Outfit', sans-serif",
+                  fontSize: 10,
+                  fontWeight: 500,
+                  letterSpacing: '0.2em',
+                  textTransform: 'uppercase' as const,
+                  color: 'rgba(245,240,234,0.3)',
+                  marginTop: 6,
+                }}>
+                  {stat.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Reveal>
+      </section>
+
+      {/* ═══════════════════════════════════════ */}
+      {/*   SECTION 3 — CARDS CTA (hierarchy)    */}
+      {/* ═══════════════════════════════════════ */}
+      <section className="max-w-[960px] mx-auto px-5 md:px-8 mt-2">
+        <Reveal delay={0.1}>
+          <div className="grid grid-cols-3 gap-3">
+
+            {/* PRIMARY — Reprendre ma lecon */}
+            <Link
+              to="/academy"
+              className="group relative overflow-hidden flex flex-col items-center justify-center gap-2.5 py-5 px-3 rounded-2xl transition-all duration-300 active:scale-[0.97]"
+              style={{
+                background: 'linear-gradient(135deg, #b5824e, #9a6d3c)',
+                minHeight: 88,
+              }}
+            >
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden" style={{ background: 'rgba(5,5,5,0.15)' }}>
+                <img src={ic.book} alt="" className="w-6 h-6 object-contain" style={{ filter: 'brightness(0)' }} />
+              </div>
+              <span style={{
+                fontFamily: "'Outfit', sans-serif",
+                fontSize: 12,
+                fontWeight: 700,
+                color: '#050505',
+                textAlign: 'center' as const,
+                lineHeight: 1.2,
+              }}>
+                Reprendre ma lecon
+              </span>
+            </Link>
+
+            {/* SECONDARY — Quiz du jour */}
+            <Link
+              to="/quiz"
+              className="group flex flex-col items-center justify-center gap-2.5 py-5 px-3 rounded-2xl transition-all duration-300 active:scale-[0.97]"
+              style={{
+                background: '#0c0b09',
+                border: '0.5px solid rgba(181,130,78,0.15)',
+                minHeight: 88,
+              }}
+            >
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden" style={{ background: 'rgba(181,130,78,0.08)' }}>
+                <img src={ic.quiz} alt="" className="w-6 h-6 object-contain" />
+              </div>
+              <span style={{
+                fontFamily: "'Outfit', sans-serif",
+                fontSize: 12,
+                fontWeight: 600,
+                color: '#f5f0ea',
+                textAlign: 'center' as const,
+                lineHeight: 1.2,
+              }}>
+                Quiz du jour
+              </span>
+            </Link>
+
+            {/* TERTIARY — Ecouter */}
+            <Link
+              to="/music"
+              className="group flex flex-col items-center justify-center gap-2.5 py-5 px-3 rounded-2xl transition-all duration-300 active:scale-[0.97]"
+              style={{
+                background: '#0c0b09',
+                border: '0.5px solid rgba(245,240,234,0.05)',
+                minHeight: 88,
+              }}
+            >
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden" style={{ background: 'rgba(245,240,234,0.04)' }}>
+                <img src={ic.radio} alt="" className="w-6 h-6 object-contain" style={{ opacity: 0.7 }} />
+              </div>
+              <span style={{
+                fontFamily: "'Outfit', sans-serif",
+                fontSize: 12,
+                fontWeight: 500,
+                color: 'rgba(245,240,234,0.55)',
+                textAlign: 'center' as const,
+                lineHeight: 1.2,
+              }}>
+                Ecouter
+              </span>
+            </Link>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* ═══════════════════════════════════════ */}
+      {/*   SECTION 4 — ACADEMY PROGRESS         */}
+      {/* ═══════════════════════════════════════ */}
+      <section className="max-w-[960px] mx-auto px-5 md:px-8 mt-5">
+        <Reveal delay={0.12}>
+          <Link
+            to="/academy"
+            className="group block relative overflow-hidden rounded-2xl transition-all duration-300"
+            style={{
+              background: '#0c0b09',
+              border: '0.5px solid rgba(181,130,78,0.1)',
+              padding: '22px 24px',
+            }}
+          >
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                {/* Label */}
+                <div className="flex items-center gap-2 mb-2">
+                  <span style={{
+                    display: 'inline-block',
+                    width: 4,
+                    height: 4,
+                    background: '#b5824e',
+                    borderRadius: 1,
+                  }} />
+                  <span style={{
+                    fontFamily: "'Outfit', sans-serif",
+                    fontSize: 9,
+                    fontWeight: 500,
+                    letterSpacing: '0.2em',
+                    textTransform: 'uppercase' as const,
+                    color: '#b5824e',
+                  }}>
                     Academy
                   </span>
                 </div>
-                <h3 className="font-semibold" style={{ fontSize: 16, color: '#f5f0ea' }}>
+
+                {/* Title */}
+                <h3 style={{
+                  fontFamily: "'Outfit', sans-serif",
+                  fontSize: 18,
+                  fontWeight: 700,
+                  color: '#f5f0ea',
+                  lineHeight: 1.2,
+                }}>
                   Lecon 3 &middot; Les salutations
                 </h3>
-                <div className="mt-3 w-full max-w-[260px]">
+
+                {/* Progress bar — 6px height with glow */}
+                <div className="mt-4 w-full max-w-[280px]">
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] font-medium" style={{ color: 'rgba(245,240,234,0.4)' }}>Progression</span>
-                    <span className="text-[11px] font-bold" style={{ color: '#b5824e' }}>25%</span>
+                    <span style={{ fontFamily: "'Outfit', sans-serif", fontSize: 10, fontWeight: 400, color: 'rgba(245,240,234,0.35)' }}>
+                      Progression
+                    </span>
+                    <span style={{ fontFamily: "'Outfit', sans-serif", fontSize: 11, fontWeight: 600, color: '#b5824e' }}>
+                      25%
+                    </span>
                   </div>
-                  <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: 'rgba(245,240,234,0.06)' }}>
+                  <div
+                    className="w-full overflow-hidden"
+                    style={{ height: 6, borderRadius: 3, background: '#1a1a1a' }}
+                  >
                     <motion.div
-                      className="h-full rounded-full"
-                      style={{ background: 'linear-gradient(90deg, #b5824e, #c49a62)' }}
+                      style={{
+                        height: '100%',
+                        borderRadius: 3,
+                        background: 'linear-gradient(90deg, #b5824e, #c49a62)',
+                        boxShadow: '0 0 8px rgba(181,130,78,0.3)',
+                      }}
                       initial={{ width: 0 }}
                       animate={{ width: '25%' }}
-                      transition={{ duration: 1.2, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                      transition={{ duration: 1.2, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
                     />
                   </div>
                 </div>
               </div>
+
+              {/* CTA button — pill shape */}
               <div
-                className="shrink-0 ml-4 px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300 group-hover:scale-105 flex items-center gap-2"
+                className="shrink-0 flex items-center gap-2 transition-all duration-300 group-hover:scale-[1.03]"
                 style={{
-                  background: 'linear-gradient(135deg, #b5824e, #9a6d3c)',
+                  background: '#b5824e',
                   color: '#050505',
-                  boxShadow: '0 4px 16px rgba(181,130,78,0.25)',
+                  borderRadius: 999,
+                  padding: '10px 20px',
+                  fontFamily: "'Outfit', sans-serif",
+                  fontSize: 13,
+                  fontWeight: 700,
                 }}
               >
                 Continuer
-                <ArrowRight />
+                <ArrowRight size={13} />
               </div>
             </div>
           </Link>
-        </ScrollReveal>
+        </Reveal>
       </section>
 
-      {/* ═══ EXPLORE SECTION ═══ */}
-      <section className="max-w-[1100px] mx-auto px-5 md:px-8 mt-12">
-        <ScrollReveal>
-          <div className="flex items-end justify-between mb-8">
-            <div>
-              <div className="amber-line" />
-              <h2 style={{ fontSize: 'clamp(24px, 3vw, 32px)', fontWeight: 700, color: '#f5f0ea', lineHeight: 1.2, fontFamily: "'Outfit', sans-serif" }}>
-                Explore PULAAR+
-              </h2>
-              <p className="mt-2" style={{ fontSize: 14, color: 'rgba(245,240,234,0.5)', maxWidth: 400 }}>
-                Sept rubriques pour decouvrir, apprendre et celebrer la culture Peule.
-              </p>
-            </div>
-          </div>
-        </ScrollReveal>
+      {/* ═══════════════════════════════════════ */}
+      {/*   SECTION 5 — EXPLORE RUBRIQUES        */}
+      {/* ═══════════════════════════════════════ */}
+      <section className="max-w-[960px] mx-auto px-5 md:px-8 mt-14">
+        <Reveal>
+          <h2 style={{
+            fontFamily: "'Outfit', sans-serif",
+            fontWeight: 800,
+            fontSize: 'clamp(24px, 4vw, 32px)',
+            color: '#f5f0ea',
+            letterSpacing: '-0.04em',
+            lineHeight: 1.1,
+          }}>
+            Explore PULAAR+
+          </h2>
+          <p style={{
+            fontFamily: "'Outfit', sans-serif",
+            fontWeight: 300,
+            fontSize: 14,
+            color: 'rgba(245,240,234,0.4)',
+            marginTop: 8,
+            lineHeight: 1.5,
+          }}>
+            Sept rubriques pour decouvrir et celebrer la culture Peule.
+          </p>
+        </Reveal>
 
-        {/* Main Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-
-          {/* ─ Quiz ─ Wide card */}
-          <ScrollReveal delay={0} className="col-span-2">
-            <Link
-              to="/quiz"
-              className="group block relative overflow-hidden h-full"
-              style={{
-                minHeight: 200,
-                borderRadius: 22,
-                background: 'linear-gradient(135deg, rgba(181,130,78,0.14), rgba(12,11,9,0.95))',
-                border: '1px solid rgba(181,130,78,0.15)',
-              }}
+        {/* Grid — 2 cols desktop, 1 mobile, uniform height */}
+        <div
+          className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-8"
+        >
+          {[
+            {
+              to: '/quiz',
+              icon: ic.quiz,
+              name: 'Quiz',
+              desc: 'Teste tes connaissances sur la culture Peule',
+              meta: '100 questions',
+              accent: true,
+            },
+            {
+              to: '/academy',
+              icon: ic.book,
+              name: 'Academy',
+              desc: 'Apprends le Pulaar pas a pas',
+              meta: '13 lecons',
+            },
+            {
+              to: '/music',
+              icon: ic.radio,
+              name: 'Pulaar Music',
+              desc: 'Playlist 100% Pulaar',
+              meta: '10 titres',
+              extra: <EqBars />,
+            },
+            {
+              to: '/kitchen',
+              icon: ic.pot,
+              name: 'Kitchen',
+              desc: 'Recettes & cuisine traditionnelle',
+              meta: '8 recettes',
+              photo: kitchenPhoto,
+            },
+            {
+              to: '/yettore',
+              icon: ic.zebu,
+              name: 'Yettore',
+              desc: 'Ton patronyme & ta lignee',
+              meta: '10 familles',
+            },
+            {
+              to: '/peul-fier',
+              icon: ic.stars,
+              name: 'Peul & Fier',
+              desc: 'Grandes personnalites Peules',
+              meta: '6 figures',
+            },
+            {
+              to: '/peulnation',
+              icon: ic.globe,
+              name: 'PeulNation',
+              desc: 'La presence Peule dans le monde',
+              meta: '15+ pays',
+              wide: true,
+            },
+          ].map((item, i) => (
+            <Reveal
+              key={item.to}
+              delay={i * 0.05}
+              className={item.wide ? 'md:col-span-2' : ''}
             >
-              <FulaniPattern opacity={0.03} />
-              {/* Large decorative icon */}
-              <div className="absolute -bottom-4 -right-4 opacity-[0.06] transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6">
-                <img src={ic.quiz} alt="" className="w-[180px] h-[180px] object-contain" draggable={false} />
-              </div>
-              {/* Glow */}
-              <div
-                className="absolute top-0 left-0 w-[250px] h-[200px]"
-                style={{ background: 'radial-gradient(ellipse, rgba(181,130,78,0.1), transparent 70%)' }}
-              />
-              <div className="relative z-10 h-full flex flex-col justify-between p-6 md:p-8">
-                <div>
-                  <div
-                    className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(181,130,78,0.25)] overflow-hidden"
-                    style={{ background: 'rgba(181,130,78,0.15)', border: '1px solid rgba(181,130,78,0.15)' }}
-                  >
-                    <img src={ic.quiz} alt="" className="w-8 h-8 object-contain" />
+              <Link
+                to={item.to}
+                className="group block relative overflow-hidden h-full rounded-2xl transition-all duration-300"
+                style={{
+                  background: '#0c0b09',
+                  border: '0.5px solid rgba(22,20,16,1)',
+                  minHeight: item.wide ? 100 : 140,
+                }}
+              >
+                {/* Photo background (Kitchen) */}
+                {item.photo && (
+                  <>
+                    <div
+                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                      style={{ backgroundImage: `url(${item.photo})` }}
+                    />
+                    <div
+                      className="absolute inset-0"
+                      style={{ background: 'linear-gradient(135deg, rgba(5,5,5,0.85) 30%, rgba(5,5,5,0.6) 100%)' }}
+                    />
+                  </>
+                )}
+
+                {/* Hover border + shadow */}
+                <div
+                  className="absolute inset-0 rounded-2xl transition-all duration-300 opacity-0 group-hover:opacity-100"
+                  style={{
+                    border: '0.5px solid rgba(181,130,78,0.15)',
+                    boxShadow: '0 8px 32px rgba(181,130,78,0.04)',
+                  }}
+                />
+
+                <div className={`relative z-10 flex ${item.wide ? 'items-center' : 'flex-col'} gap-4 p-5 md:p-6 h-full`}>
+                  {/* Icon */}
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden shrink-0 transition-transform duration-300 group-hover:scale-105"
+                      style={{ background: item.accent ? 'rgba(181,130,78,0.12)' : 'rgba(245,240,234,0.03)' }}
+                    >
+                      <img src={item.icon} alt="" className="w-7 h-7 object-contain" />
+                    </div>
+                    {item.extra && <div className="hidden md:block">{item.extra}</div>}
                   </div>
-                  <h3
-                    className="font-bold transition-colors duration-300 group-hover:text-[#b5824e]"
-                    style={{ fontSize: 24, color: '#f5f0ea', lineHeight: 1.2 }}
-                  >
-                    Quiz
-                  </h3>
-                  <p className="mt-2 max-w-sm" style={{ fontSize: 14, color: 'rgba(245,240,234,0.55)', lineHeight: 1.5 }}>
-                    Teste tes connaissances sur la culture Peule, l'histoire et la langue
-                  </p>
-                </div>
-                <div className="flex items-center justify-between mt-4">
-                  <span
-                    className="px-3 py-1 rounded-full text-xs font-medium"
-                    style={{ background: 'rgba(181,130,78,0.12)', color: '#c49a62' }}
-                  >
-                    100 questions
-                  </span>
-                  <span
-                    className="flex items-center gap-1.5 text-sm font-medium opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0"
+
+                  {/* Text */}
+                  <div className={`flex-1 min-w-0 ${item.wide ? '' : 'mt-auto'}`}>
+                    <h3
+                      className="transition-colors duration-300 group-hover:text-[#b5824e]"
+                      style={{
+                        fontFamily: "'Outfit', sans-serif",
+                        fontWeight: 700,
+                        fontSize: item.wide ? 20 : 18,
+                        color: '#f5f0ea',
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      {item.name}
+                    </h3>
+                    <p style={{
+                      fontFamily: "'Outfit', sans-serif",
+                      fontWeight: 300,
+                      fontSize: 13,
+                      color: 'rgba(245,240,234,0.45)',
+                      lineHeight: 1.4,
+                      marginTop: 4,
+                    }}>
+                      {item.desc} {item.wide && <span style={{ color: 'rgba(245,240,234,0.25)' }}>&middot; {item.meta}</span>}
+                    </p>
+                    {!item.wide && (
+                      <span style={{
+                        fontFamily: "'Outfit', sans-serif",
+                        fontSize: 11,
+                        fontWeight: 400,
+                        color: 'rgba(245,240,234,0.25)',
+                        marginTop: 8,
+                        display: 'inline-block',
+                      }}>
+                        {item.meta}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Hover arrow */}
+                  <div
+                    className="hidden md:flex items-center opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-1 group-hover:translate-x-0"
                     style={{ color: '#b5824e' }}
                   >
-                    Jouer <ArrowRight />
-                  </span>
-                </div>
-              </div>
-            </Link>
-          </ScrollReveal>
-
-          {/* ─ Academy ─ */}
-          <ScrollReveal delay={0.06}>
-            <Link
-              to="/academy"
-              className="group block relative overflow-hidden h-full"
-              style={{
-                minHeight: 200,
-                borderRadius: 22,
-                background: 'linear-gradient(160deg, rgba(59,130,246,0.06), #0c0b09)',
-                border: '1px solid rgba(245,240,234,0.06)',
-              }}
-            >
-              <div className="p-5 md:p-6 h-full flex flex-col">
-                <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110 overflow-hidden"
-                  style={{ background: 'rgba(181,130,78,0.1)' }}
-                >
-                  <img src={ic.book} alt="" className="w-7 h-7 object-contain" />
-                </div>
-                <h3
-                  className="font-bold transition-colors duration-300 group-hover:text-[#b5824e]"
-                  style={{ fontSize: 18, color: '#f5f0ea' }}
-                >
-                  Academy
-                </h3>
-                <p className="mt-1.5 flex-1" style={{ fontSize: 13, color: 'rgba(245,240,234,0.45)', lineHeight: 1.5 }}>
-                  Apprends le Pulaar pas a pas
-                </p>
-                <span
-                  className="mt-3 px-3 py-1 rounded-full text-[11px] font-medium self-start"
-                  style={{ background: 'rgba(245,240,234,0.04)', color: 'rgba(245,240,234,0.5)' }}
-                >
-                  13 lecons
-                </span>
-              </div>
-            </Link>
-          </ScrollReveal>
-
-          {/* ─ Music ─ */}
-          <ScrollReveal delay={0.1}>
-            <Link
-              to="/music"
-              className="group block relative overflow-hidden h-full"
-              style={{
-                minHeight: 180,
-                borderRadius: 22,
-                background: 'linear-gradient(160deg, rgba(181,130,78,0.08), #0c0b09)',
-                border: '1px solid rgba(245,240,234,0.06)',
-              }}
-            >
-              <div className="p-5 md:p-6 h-full flex flex-col">
-                <div className="flex items-start justify-between mb-4">
-                  <div
-                    className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 overflow-hidden"
-                    style={{ background: 'rgba(181,130,78,0.1)' }}
-                  >
-                    <img src={ic.radio} alt="" className="w-7 h-7 object-contain" />
+                    <ArrowRight />
                   </div>
-                  <EqBars />
                 </div>
-                <h3
-                  className="font-bold transition-colors duration-300 group-hover:text-[#b5824e]"
-                  style={{ fontSize: 18, color: '#f5f0ea' }}
-                >
-                  Music
-                </h3>
-                <p className="mt-1.5 flex-1" style={{ fontSize: 13, color: 'rgba(245,240,234,0.45)', lineHeight: 1.5 }}>
-                  Playlist 100% Pulaar
-                </p>
-                <span
-                  className="mt-3 px-3 py-1 rounded-full text-[11px] font-medium self-start"
-                  style={{ background: 'rgba(245,240,234,0.04)', color: 'rgba(245,240,234,0.5)' }}
-                >
-                  10 titres
-                </span>
-              </div>
-            </Link>
-          </ScrollReveal>
-
-          {/* ─ Kitchen ─ Food photo card */}
-          <ScrollReveal delay={0.14} className="col-span-2 lg:col-span-1">
-            <Link
-              to="/kitchen"
-              className="group block relative overflow-hidden h-full"
-              style={{
-                minHeight: 200,
-                borderRadius: 22,
-              }}
-            >
-              {/* Food photo bg */}
-              {kitchenPhoto && (
-                <div
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                  style={{ backgroundImage: `url(${kitchenPhoto})` }}
-                />
-              )}
-              <div
-                className="absolute inset-0"
-                style={{
-                  background: kitchenPhoto
-                    ? 'linear-gradient(180deg, rgba(5,5,5,0.2) 0%, rgba(5,5,5,0.65) 50%, rgba(5,5,5,0.92) 100%)'
-                    : 'linear-gradient(135deg, rgba(181,130,78,0.12), #0c0b09)',
-                }}
-              />
-              <div className="relative z-10 h-full flex flex-col justify-end p-5 md:p-6">
-                <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3 transition-all duration-300 group-hover:scale-110 overflow-hidden"
-                  style={{ background: 'rgba(181,130,78,0.15)', border: '1px solid rgba(181,130,78,0.15)' }}
-                >
-                  <img src={ic.pot} alt="" className="w-7 h-7 object-contain" />
-                </div>
-                <h3
-                  className="font-bold transition-colors duration-300 group-hover:text-[#b5824e]"
-                  style={{ fontSize: 20, color: '#f5f0ea' }}
-                >
-                  Pulaar Kitchen
-                </h3>
-                <p className="mt-1" style={{ fontSize: 13, color: 'rgba(245,240,234,0.55)' }}>
-                  Recettes & cuisine traditionnelle
-                </p>
-                <span
-                  className="mt-3 px-3 py-1 rounded-full text-[11px] font-medium self-start"
-                  style={{ background: 'rgba(181,130,78,0.12)', color: '#c49a62' }}
-                >
-                  8 recettes
-                </span>
-              </div>
-            </Link>
-          </ScrollReveal>
-
-          {/* ─ Yettore ─ */}
-          <ScrollReveal delay={0.18}>
-            <Link
-              to="/yettore"
-              className="group block relative overflow-hidden h-full"
-              style={{
-                minHeight: 180,
-                borderRadius: 22,
-                background: 'linear-gradient(160deg, rgba(212,162,78,0.06), #0c0b09)',
-                border: '1px solid rgba(245,240,234,0.06)',
-              }}
-            >
-              <div className="p-5 md:p-6 h-full flex flex-col">
-                <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110 overflow-hidden"
-                  style={{ background: 'rgba(181,130,78,0.1)' }}
-                >
-                  <img src={ic.zebu} alt="" className="w-7 h-7 object-contain" />
-                </div>
-                <h3
-                  className="font-bold transition-colors duration-300 group-hover:text-[#b5824e]"
-                  style={{ fontSize: 18, color: '#f5f0ea' }}
-                >
-                  Yettore
-                </h3>
-                <p className="mt-1.5 flex-1" style={{ fontSize: 13, color: 'rgba(245,240,234,0.45)', lineHeight: 1.5 }}>
-                  Ton patronyme & ta lignee
-                </p>
-                <span
-                  className="mt-3 px-3 py-1 rounded-full text-[11px] font-medium self-start"
-                  style={{ background: 'rgba(245,240,234,0.04)', color: 'rgba(245,240,234,0.5)' }}
-                >
-                  10 familles
-                </span>
-              </div>
-            </Link>
-          </ScrollReveal>
-
-          {/* ─ Peul & Fier ─ */}
-          <ScrollReveal delay={0.22}>
-            <Link
-              to="/peul-fier"
-              className="group block relative overflow-hidden h-full"
-              style={{
-                minHeight: 180,
-                borderRadius: 22,
-                background: 'linear-gradient(160deg, rgba(244,63,94,0.04), #0c0b09)',
-                border: '1px solid rgba(245,240,234,0.06)',
-              }}
-            >
-              <div className="p-5 md:p-6 h-full flex flex-col">
-                <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110 overflow-hidden"
-                  style={{ background: 'rgba(181,130,78,0.1)' }}
-                >
-                  <img src={ic.stars} alt="" className="w-7 h-7 object-contain" />
-                </div>
-                <h3
-                  className="font-bold transition-colors duration-300 group-hover:text-[#b5824e]"
-                  style={{ fontSize: 18, color: '#f5f0ea' }}
-                >
-                  Peul & Fier
-                </h3>
-                <p className="mt-1.5 flex-1" style={{ fontSize: 13, color: 'rgba(245,240,234,0.45)', lineHeight: 1.5 }}>
-                  Grandes personnalites Peules
-                </p>
-                <span
-                  className="mt-3 px-3 py-1 rounded-full text-[11px] font-medium self-start"
-                  style={{ background: 'rgba(245,240,234,0.04)', color: 'rgba(245,240,234,0.5)' }}
-                >
-                  6 figures
-                </span>
-              </div>
-            </Link>
-          </ScrollReveal>
-
-          {/* ─ PeulNation ─ Wide card */}
-          <ScrollReveal delay={0.26} className="col-span-2 lg:col-span-3">
-            <Link
-              to="/peulnation"
-              className="group block relative overflow-hidden"
-              style={{
-                minHeight: 160,
-                borderRadius: 22,
-                background: 'linear-gradient(135deg, rgba(34,211,238,0.04), rgba(181,130,78,0.06), #0c0b09)',
-                border: '1px solid rgba(245,240,234,0.06)',
-              }}
-            >
-              {/* Large decorative globe */}
-              <div className="absolute -bottom-6 right-8 md:right-16 opacity-[0.05] transition-transform duration-500 group-hover:scale-110">
-                <img src={ic.globe} alt="" className="w-[160px] h-[160px] md:w-[200px] md:h-[200px] object-contain" draggable={false} />
-              </div>
-              <div className="relative z-10 flex items-center gap-6 p-6 md:p-8 h-full">
-                <div
-                  className="shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 overflow-hidden"
-                  style={{ background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.1)' }}
-                >
-                  <img src={ic.globe} alt="" className="w-8 h-8 object-contain" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3
-                    className="font-bold transition-colors duration-300 group-hover:text-[#b5824e]"
-                    style={{ fontSize: 22, color: '#f5f0ea' }}
-                  >
-                    PeulNation
-                  </h3>
-                  <p className="mt-1" style={{ fontSize: 14, color: 'rgba(245,240,234,0.5)' }}>
-                    La presence Peule dans le monde &middot; 15+ pays
-                  </p>
-                </div>
-                <span
-                  className="hidden md:flex items-center gap-1.5 text-sm font-medium opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0"
-                  style={{ color: '#b5824e' }}
-                >
-                  Decouvrir <ArrowRight />
-                </span>
-              </div>
-            </Link>
-          </ScrollReveal>
+              </Link>
+            </Reveal>
+          ))}
         </div>
       </section>
 
-      {/* ═══ CULTURE DU JOUR ═══ */}
-      <section className="max-w-[1100px] mx-auto px-5 md:px-8 mt-12">
-        <ScrollReveal delay={0.1}>
+      {/* ═══════════════════════════════════════ */}
+      {/*   SECTION 6 — CULTURE DU JOUR          */}
+      {/* ═══════════════════════════════════════ */}
+      <section className="max-w-[960px] mx-auto px-5 md:px-8 mt-12">
+        <Reveal delay={0.08}>
           <div
-            className="relative overflow-hidden"
+            className="relative overflow-hidden rounded-2xl"
             style={{
-              borderRadius: 22,
-              border: '1px solid rgba(181,130,78,0.1)',
-              padding: '28px 28px',
-              background: 'linear-gradient(135deg, rgba(181,130,78,0.06), rgba(12,11,9,0.95))',
+              background: '#0c0b09',
+              border: '0.5px solid rgba(181,130,78,0.08)',
+              padding: '24px',
             }}
           >
+            {/* Top amber line */}
             <div
-              className="absolute top-0 left-6 right-6 h-[1px]"
-              style={{ background: 'linear-gradient(90deg, transparent, rgba(181,130,78,0.3), transparent)' }}
+              className="absolute top-0 left-6 right-6 h-px"
+              style={{ background: 'linear-gradient(90deg, transparent, rgba(181,130,78,0.2), transparent)' }}
             />
-            <span
-              className="inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.15em] mb-3"
-              style={{
-                background: 'rgba(181,130,78,0.12)',
-                color: '#b5824e',
-                border: '1px solid rgba(181,130,78,0.2)',
-              }}
-            >
+
+            <span style={{
+              fontFamily: "'Outfit', sans-serif",
+              fontSize: 9,
+              fontWeight: 500,
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase' as const,
+              color: '#b5824e',
+            }}>
               Culture du jour
             </span>
-            <p style={{ fontSize: 15, color: 'rgba(245,240,234,0.7)', lineHeight: 1.8 }}>
+
+            <p style={{
+              fontFamily: "'Outfit', sans-serif",
+              fontWeight: 300,
+              fontSize: 14,
+              color: 'rgba(245,240,234,0.6)',
+              lineHeight: 1.8,
+              marginTop: 12,
+            }}>
               Le Fouta-Toro, berceau du peuple Peul, s'etend le long du fleuve Senegal.
               Centre historique de la civilisation Peule, il a vu naitre des royaumes
               puissants et reste aujourd'hui un haut lieu de la culture et des traditions Haalpulaar.
             </p>
           </div>
-        </ScrollReveal>
+        </Reveal>
       </section>
 
-      {/* ═══ MUSIC BANNER ═══ */}
-      <section className="max-w-[1100px] mx-auto px-5 md:px-8 mt-6">
-        <ScrollReveal delay={0.1}>
+      {/* ═══════════════════════════════════════ */}
+      {/*   SECTION 7 — MUSIC BANNER             */}
+      {/* ═══════════════════════════════════════ */}
+      <section className="max-w-[960px] mx-auto px-5 md:px-8 mt-5">
+        <Reveal delay={0.1}>
           <Link
             to="/music"
-            className="block relative overflow-hidden group"
+            className="group block relative overflow-hidden rounded-2xl"
             style={{
-              borderRadius: 22,
-              height: 180,
-              background: 'linear-gradient(135deg, rgba(181,130,78,0.15), rgba(196,154,98,0.06), rgba(181,130,78,0.08))',
-              border: '1px solid rgba(181,130,78,0.12)',
+              height: 160,
+              background: 'linear-gradient(135deg, rgba(181,130,78,0.1), rgba(181,130,78,0.03))',
+              border: '0.5px solid rgba(181,130,78,0.1)',
             }}
           >
+            {/* Warm glow center */}
             <div
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[250px]"
-              style={{ background: 'radial-gradient(ellipse, rgba(181,130,78,0.12), transparent 70%)' }}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+              style={{
+                width: 300, height: 200,
+                background: 'radial-gradient(ellipse, rgba(181,130,78,0.08), transparent 70%)',
+              }}
             />
-            <div className="absolute inset-0 opacity-20">
-              <FulaniPattern opacity={0.04} />
-            </div>
 
             <div className="relative z-10 h-full flex items-center justify-between p-6 md:p-8">
               <div>
-                <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center gap-3 mb-2">
                   <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden"
-                    style={{ background: 'rgba(181,130,78,0.15)' }}
+                    className="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden"
+                    style={{ background: 'rgba(181,130,78,0.1)' }}
                   >
-                    <img src={ic.radio} alt="" className="w-6 h-6 object-contain" />
+                    <img src={ic.radio} alt="" className="w-5 h-5 object-contain" />
                   </div>
                   <EqBars />
                 </div>
-                <h3
-                  className="font-bold"
-                  style={{ fontSize: 24, color: '#f5f0ea', lineHeight: 1.2 }}
-                >
+                <h3 style={{
+                  fontFamily: "'Outfit', sans-serif",
+                  fontWeight: 800,
+                  fontSize: 22,
+                  color: '#f5f0ea',
+                  lineHeight: 1.2,
+                  letterSpacing: '-0.02em',
+                }}>
                   Pulaar Music
                 </h3>
-                <p className="mt-1" style={{ fontSize: 14, color: 'rgba(245,240,234,0.5)' }}>
+                <p style={{
+                  fontFamily: "'Outfit', sans-serif",
+                  fontWeight: 300,
+                  fontSize: 13,
+                  color: 'rgba(245,240,234,0.4)',
+                  marginTop: 4,
+                }}>
                   Ta playlist 100% pulaar
                 </p>
               </div>
 
-              {/* Animated play button */}
+              {/* Play button with pulse */}
               <div className="relative shrink-0">
                 <motion.div
                   className="absolute rounded-full"
-                  style={{ background: 'rgba(181,130,78,0.15)', inset: -12 }}
-                  animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0, 0.4] }}
+                  style={{ background: 'rgba(181,130,78,0.12)', inset: -10 }}
+                  animate={{ scale: [1, 1.25, 1], opacity: [0.3, 0, 0.3] }}
                   transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                 />
-                <motion.div
-                  className="absolute rounded-full"
-                  style={{ background: 'rgba(181,130,78,0.1)', inset: -12 }}
-                  animate={{ scale: [1, 1.6, 1], opacity: [0.2, 0, 0.2] }}
-                  transition={{ duration: 2, delay: 0.3, repeat: Infinity, ease: 'easeInOut' }}
-                />
                 <div
-                  className="relative w-14 h-14 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
+                  className="relative w-12 h-12 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
                   style={{
                     background: 'linear-gradient(135deg, #b5824e, #c49a62)',
-                    boxShadow: '0 6px 24px rgba(181,130,78,0.35)',
+                    boxShadow: '0 4px 16px rgba(181,130,78,0.25)',
                   }}
                 >
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="#050505">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#050505">
                     <path d="M8 5v14l11-7z" />
                   </svg>
                 </div>
               </div>
             </div>
           </Link>
-        </ScrollReveal>
+        </Reveal>
       </section>
 
     </div>
