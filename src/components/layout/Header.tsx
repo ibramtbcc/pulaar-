@@ -9,7 +9,7 @@ const avatars = avatarsData as Record<string, { b64: string }>
 
 /* Only 4 items visible in nav — the rest goes in "..." */
 const mainNav = [
-  { to: '/', label: 'Accueil' },
+  { to: '/home', label: 'Accueil' },
   { to: '/quiz', label: 'Quiz' },
   { to: '/academy', label: 'Academy' },
   { to: '/music', label: 'Music' },
@@ -61,7 +61,7 @@ export default function Header() {
 
         <div className="max-w-[1200px] mx-auto flex items-center justify-between h-16 px-6 lg:px-10">
           {/* Logo — dominant */}
-          <Link to="/" className="flex-shrink-0 flex items-center gap-0 select-none">
+          <Link to="/home" className="flex-shrink-0 flex items-center gap-0 select-none">
             <span
               style={{
                 fontFamily: "'Outfit', sans-serif",
@@ -92,7 +92,7 @@ export default function Header() {
               <NavLink
                 key={item.to}
                 to={item.to}
-                end={item.to === '/'}
+                end={item.to === '/home'}
                 className={({ isActive }) =>
                   `relative px-4 py-2 rounded-lg transition-all duration-300 ${
                     isActive
@@ -205,7 +205,7 @@ export default function Header() {
 
             {/* Avatar — real or initials */}
             <Link
-              to="/"
+              to="/home"
               className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-105 overflow-hidden"
               style={{
                 border: '1.5px solid rgba(181,130,78,0.4)',
@@ -244,7 +244,7 @@ export default function Header() {
                   <NavLink
                     key={item.to}
                     to={item.to}
-                    end={item.to === '/'}
+                    end={item.to === '/home'}
                     onClick={() => setMobileOpen(false)}
                     className={({ isActive }) =>
                       `px-4 py-3 rounded-xl transition-all duration-200 ${

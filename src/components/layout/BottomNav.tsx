@@ -8,7 +8,7 @@ const ic = iconsData as Record<string, string>
 const Ic = ({ k, s }: { k: string; s: number }) => <img src={ic[k]} alt="" style={{ width: s, height: s }} className="object-contain" />
 
 const mainTabs = [
-  { to: '/', icon: <IconHome size={22} />, label: 'Accueil' },
+  { to: '/home', icon: <IconHome size={22} />, label: 'Accueil' },
   { to: '/quiz', icon: <Ic k="quiz" s={22} />, label: 'Quiz' },
   { to: '/academy', icon: <Ic k="book" s={22} />, label: 'Academy' },
   { to: '/music', icon: <Ic k="radio" s={22} />, label: 'Music' },
@@ -71,7 +71,7 @@ export default function BottomNav() {
               </div>
 
               <NavLink
-                to="/"
+                to="/home"
                 onClick={() => setMenuOpen(false)}
                 className="flex items-center justify-center mt-4 py-4 rounded-2xl"
                 style={{
@@ -101,7 +101,7 @@ export default function BottomNav() {
             <NavLink
               key={tab.to}
               to={tab.to}
-              end={tab.to === '/'}
+              end={tab.to === '/home'}
               className={({ isActive }) =>
                 `flex flex-col items-center gap-1 py-1 px-3 transition-all duration-200 ${
                   isActive ? 'text-[#b5824e]' : 'text-[rgba(245,240,234,0.4)]'
