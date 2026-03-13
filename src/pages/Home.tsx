@@ -4,6 +4,9 @@ import { motion, useScroll, useTransform } from 'framer-motion'
 import ScrollReveal from '../components/shared/ScrollReveal'
 import { useUserStore } from '../stores/userStore'
 import { IconBook, IconQuestion, IconRadio, IconPot, IconBaobab, IconStars, IconGlobe, IconPlay } from '../components/shared/Icons'
+import icons from '../data/icons.json'
+
+const ic = icons as Record<string, string>
 
 /* ─── Fulani geometric SVG pattern (inline) ─── */
 function FulaniPattern() {
@@ -123,15 +126,15 @@ export default function Home() {
                 className="surface-card card-hover block p-7 md:p-9 group relative overflow-hidden h-full"
                 style={{ minHeight: 200, background: 'linear-gradient(135deg, rgba(181,130,78,0.1), rgba(181,130,78,0.03))' }}
               >
-                <div className="absolute top-4 right-4 opacity-[0.06]">
-                  <IconQuestion size={120} />
+                <div className="absolute top-4 right-4 opacity-[0.07]">
+                  <img src={ic.quiz} alt="" className="w-[120px] h-[120px] object-contain" draggable={false} />
                 </div>
                 <div className="relative z-10">
                   <div
-                    className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110"
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110 overflow-hidden"
                     style={{ background: 'rgba(181,130,78,0.15)' }}
                   >
-                    <IconQuestion size={28} />
+                    <img src={ic.quiz} alt="" className="w-9 h-9 object-contain" />
                   </div>
                   <h3 className="text-h2 group-hover:text-[#b5824e] transition-colors duration-300">Quiz</h3>
                   <p className="text-body mt-2 max-w-sm">Teste tes connaissances sur la culture Peule</p>
@@ -152,10 +155,10 @@ export default function Home() {
                 style={{ minHeight: 200 }}
               >
                 <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110"
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110 overflow-hidden"
                   style={{ background: 'rgba(181,130,78,0.08)' }}
                 >
-                  <IconBook size={24} />
+                  <img src={ic.book} alt="" className="w-8 h-8 object-contain" />
                 </div>
                 <h3 className="text-h3 group-hover:text-[#b5824e] transition-colors duration-300">Academy</h3>
                 <p className="text-small mt-1.5">Apprends le Pulaar pas a pas</p>
@@ -177,10 +180,10 @@ export default function Home() {
               >
                 <div className="flex items-start justify-between mb-4">
                   <div
-                    className="w-12 h-12 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 overflow-hidden"
                     style={{ background: 'rgba(181,130,78,0.08)' }}
                   >
-                    <IconRadio size={24} />
+                    <img src={ic.radio} alt="" className="w-8 h-8 object-contain" />
                   </div>
                   <EqBars />
                 </div>
@@ -205,10 +208,10 @@ export default function Home() {
                 }}
               >
                 <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110"
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110 overflow-hidden"
                   style={{ background: 'rgba(245,158,11,0.08)' }}
                 >
-                  <IconPot size={24} />
+                  <img src={ic.pot} alt="" className="w-8 h-8 object-contain" />
                 </div>
                 <h3 className="text-h3 group-hover:text-[#b5824e] transition-colors duration-300">Kitchen</h3>
                 <p className="text-small mt-1.5">Decouvre les recettes traditionnelles Peules</p>
@@ -228,10 +231,10 @@ export default function Home() {
                 style={{ minHeight: 180 }}
               >
                 <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110"
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110 overflow-hidden"
                   style={{ background: 'rgba(59,130,246,0.08)' }}
                 >
-                  <IconBaobab size={24} />
+                  <img src={ic.zebu} alt="" className="w-8 h-8 object-contain" />
                 </div>
                 <h3 className="text-h3 group-hover:text-[#b5824e] transition-colors duration-300">Yettore</h3>
                 <p className="text-small mt-1.5">Decouvre ton patronyme et ta lignee</p>
@@ -252,10 +255,10 @@ export default function Home() {
                 style={{ minHeight: 180 }}
               >
                 <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110"
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110 overflow-hidden"
                   style={{ background: 'rgba(244,63,94,0.08)' }}
                 >
-                  <IconStars size={24} />
+                  <img src={ic.stars} alt="" className="w-8 h-8 object-contain" />
                 </div>
                 <h3 className="text-h3 group-hover:text-[#b5824e] transition-colors duration-300">Peul & Fier</h3>
                 <p className="text-small mt-1.5">Les grandes personnalites de la culture Peule</p>
@@ -275,15 +278,15 @@ export default function Home() {
                 style={{ minHeight: 180 }}
               >
                 {/* Subtle globe in background */}
-                <div className="absolute bottom-2 right-4 opacity-[0.04]">
-                  <IconGlobe size={140} />
+                <div className="absolute bottom-2 right-4 opacity-[0.06]">
+                  <img src={ic.globe} alt="" className="w-[140px] h-[140px] object-contain" draggable={false} />
                 </div>
                 <div className="relative z-10">
                   <div
-                    className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110"
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110 overflow-hidden"
                     style={{ background: 'rgba(34,211,238,0.08)' }}
                   >
-                    <IconGlobe size={28} />
+                    <img src={ic.globe} alt="" className="w-9 h-9 object-contain" />
                   </div>
                   <h3 className="text-h2 group-hover:text-[#b5824e] transition-colors duration-300">PeulNation</h3>
                   <p className="text-body mt-2 max-w-md">La presence Peule dans le monde</p>

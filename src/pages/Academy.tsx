@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import SplashScreen from '../components/shared/SplashScreen'
-import { IconBook, IconBack } from '../components/shared/Icons'
+import { IconBack } from '../components/shared/Icons'
 import ScrollReveal from '../components/shared/ScrollReveal'
 import { useIsTablet } from '../hooks/useMediaQuery'
+import icons from '../data/icons.json'
+
+const ic = icons as Record<string, string>
 
 const lessons = {
   debutant: [
@@ -62,7 +65,7 @@ export default function Academy() {
   const lessonData = openLesson !== null ? Object.values(lessons).flat().find((l) => l.id === openLesson) : null
 
   if (showSplash) {
-    return <SplashScreen icon={<IconBook size={120} />} title="Pulaar Academy" onComplete={() => setShowSplash(false)} />
+    return <SplashScreen icon={<img src={ic.book} alt="" className="w-[120px] h-[120px] object-contain" />} title="Pulaar Academy" onComplete={() => setShowSplash(false)} />
   }
 
   /* ═══ LESSON DETAIL ═══ */

@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import SplashScreen from '../components/shared/SplashScreen'
-import { IconPot, IconBack, IconHeart } from '../components/shared/Icons'
+import { IconBack, IconHeart } from '../components/shared/Icons'
 import ScrollReveal from '../components/shared/ScrollReveal'
 import { useIsTablet } from '../hooks/useMediaQuery'
 import recipesData from '../data/recipes.json'
 import foodPhotos from '../data/food.json'
+import icons from '../data/icons.json'
+
+const ic = icons as Record<string, string>
 
 interface Recipe {
   name: string; namePl: string; cat: string; time: string; diff: string; pers: string; desc: string; ingredients: string[]; steps: string[]
@@ -29,7 +32,7 @@ export default function Kitchen() {
   const openRecipeData = openRecipe ? recipesData[openRecipe as keyof typeof recipesData] as Recipe : null
 
   if (showSplash) {
-    return <SplashScreen icon={<IconPot size={120} />} title="Pulaar Kitchen" onComplete={() => setShowSplash(false)} />
+    return <SplashScreen icon={<img src={ic.pot} alt="" className="w-[120px] h-[120px] object-contain" />} title="Pulaar Kitchen" onComplete={() => setShowSplash(false)} />
   }
 
   return (

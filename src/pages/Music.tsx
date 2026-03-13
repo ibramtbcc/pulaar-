@@ -5,6 +5,9 @@ import { tracks } from '../data/tracks'
 import { IconPlay, IconPause, IconSkipNext, IconSkipPrev, IconBack, IconHeart, IconRadio } from '../components/shared/Icons'
 import SplashScreen from '../components/shared/SplashScreen'
 import { useIsTablet } from '../hooks/useMediaQuery'
+import icons from '../data/icons.json'
+
+const ic = icons as Record<string, string>
 
 export default function Music() {
   const navigate = useNavigate()
@@ -41,7 +44,7 @@ export default function Music() {
     return `${Math.floor(secs / 60)}:${(secs % 60).toString().padStart(2, '0')}`
   }
 
-  if (showSplash) return <SplashScreen icon={<IconRadio size={120} />} title="Pulaar Music" onComplete={() => setShowSplash(false)} />
+  if (showSplash) return <SplashScreen icon={<img src={ic.radio} alt="" className="w-[120px] h-[120px] object-contain" />} title="Pulaar Music" onComplete={() => setShowSplash(false)} />
 
   return (
     <div className="min-h-screen relative overflow-hidden">

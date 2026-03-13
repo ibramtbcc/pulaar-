@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import SplashScreen from '../components/shared/SplashScreen'
-import { IconStars, IconBack } from '../components/shared/Icons'
+import { IconBack } from '../components/shared/Icons'
 import ScrollReveal from '../components/shared/ScrollReveal'
 import { useIsTablet } from '../hooks/useMediaQuery'
+import icons from '../data/icons.json'
+
+const ic = icons as Record<string, string>
 
 const personalities = [
   { id: 'baaba', name: 'Baaba Maal', domain: 'Musique', country: 'Senegal', bio: 'Baaba Maal est un chanteur et musicien senegalais originaire de Podor, dans le Fouta-Toro. Figure majeure de la musique africaine, il chante en pulaar et porte fierement son heritage peul a travers le monde.', quote: '"La musique est le pont entre les cultures."', color: '#b5824e' },
@@ -20,7 +23,7 @@ export default function PeulFier() {
   const [openPerson, setOpenPerson] = useState<string | null>(null)
   const person = openPerson ? personalities.find((p) => p.id === openPerson) : null
 
-  if (showSplash) return <SplashScreen icon={<IconStars size={120} />} title="Peul & Fier" onComplete={() => setShowSplash(false)} />
+  if (showSplash) return <SplashScreen icon={<img src={ic.stars} alt="" className="w-[120px] h-[120px] object-contain" />} title="Peul & Fier" onComplete={() => setShowSplash(false)} />
 
   return (
     <div className="min-h-screen relative">

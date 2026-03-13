@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import SplashScreen from '../components/shared/SplashScreen'
-import { IconBaobab, IconQuestion, IconBook } from '../components/shared/Icons'
+import { IconQuestion, IconBook } from '../components/shared/Icons'
 import { useUserStore } from '../stores/userStore'
 import ScrollReveal from '../components/shared/ScrollReveal'
 import { useIsTablet } from '../hooks/useMediaQuery'
+import icons from '../data/icons.json'
+
+const ic = icons as Record<string, string>
 
 const rankings = [
   { name: 'Diallo', members: 342, avg: 847, trend: 'up' },
@@ -44,7 +47,7 @@ export default function Yettore() {
   const [tab, setTab] = useState<'general' | 'categories'>('general')
   const userYettore = nom || 'Diallo'
 
-  if (showSplash) return <SplashScreen icon={<IconBaobab size={120} />} title="Yettore" onComplete={() => setShowSplash(false)} />
+  if (showSplash) return <SplashScreen icon={<img src={ic.tree} alt="" className="w-[120px] h-[120px] object-contain" />} title="Yettore" onComplete={() => setShowSplash(false)} />
 
   return (
     <div className="min-h-screen">

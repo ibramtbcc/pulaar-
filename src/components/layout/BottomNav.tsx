@@ -1,23 +1,27 @@
 import { NavLink } from 'react-router-dom'
 import { useState } from 'react'
-import { IconHome, IconQuestion, IconBook, IconRadio, IconMore, IconPot, IconBaobab, IconStars, IconGlobe } from '../shared/Icons'
+import { IconHome, IconMore } from '../shared/Icons'
 import { AnimatePresence, motion } from 'framer-motion'
+import iconsData from '../../data/icons.json'
+
+const ic = iconsData as Record<string, string>
+const Ic = ({ k, s }: { k: string; s: number }) => <img src={ic[k]} alt="" style={{ width: s, height: s }} className="object-contain" />
 
 const mainTabs = [
   { to: '/', icon: <IconHome size={22} />, label: 'Accueil' },
-  { to: '/quiz', icon: <IconQuestion size={22} />, label: 'Quiz' },
-  { to: '/academy', icon: <IconBook size={22} />, label: 'Academy' },
-  { to: '/music', icon: <IconRadio size={22} />, label: 'Music' },
+  { to: '/quiz', icon: <Ic k="quiz" s={22} />, label: 'Quiz' },
+  { to: '/academy', icon: <Ic k="book" s={22} />, label: 'Academy' },
+  { to: '/music', icon: <Ic k="radio" s={22} />, label: 'Music' },
 ]
 
 const menuItems = [
-  { to: '/academy', icon: <IconBook size={28} />, label: 'Academy' },
-  { to: '/quiz', icon: <IconQuestion size={28} />, label: 'Quiz' },
-  { to: '/yettore', icon: <IconBaobab size={28} />, label: 'Yettore' },
-  { to: '/peul-fier', icon: <IconStars size={28} />, label: 'Peul & Fier' },
-  { to: '/music', icon: <IconRadio size={28} />, label: 'Music' },
-  { to: '/kitchen', icon: <IconPot size={28} />, label: 'Kitchen' },
-  { to: '/peulnation', icon: <IconGlobe size={28} />, label: 'PeulNation' },
+  { to: '/academy', icon: <Ic k="book" s={28} />, label: 'Academy' },
+  { to: '/quiz', icon: <Ic k="quiz" s={28} />, label: 'Quiz' },
+  { to: '/yettore', icon: <Ic k="zebu" s={28} />, label: 'Yettore' },
+  { to: '/peul-fier', icon: <Ic k="stars" s={28} />, label: 'Peul & Fier' },
+  { to: '/music', icon: <Ic k="radio" s={28} />, label: 'Music' },
+  { to: '/kitchen', icon: <Ic k="pot" s={28} />, label: 'Kitchen' },
+  { to: '/peulnation', icon: <Ic k="globe" s={28} />, label: 'PeulNation' },
 ]
 
 export default function BottomNav() {

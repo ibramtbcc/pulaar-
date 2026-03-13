@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import SplashScreen from '../components/shared/SplashScreen'
-import { IconGlobe } from '../components/shared/Icons'
 import ScrollReveal from '../components/shared/ScrollReveal'
 import { useIsTablet } from '../hooks/useMediaQuery'
+import icons from '../data/icons.json'
+
+const ic = icons as Record<string, string>
 
 const countries = [
   { r: 1, cc: 'ng', n: 'Nigeria', v: 20500000, p: '~9%' },
@@ -48,7 +50,7 @@ export default function PeulNation() {
   const data = tab === 'population' ? countries : diaspora
   const dMaxVal = data[0].v
 
-  if (showSplash) return <SplashScreen icon={<IconGlobe size={120} />} title="PeulNation" onComplete={() => setShowSplash(false)} />
+  if (showSplash) return <SplashScreen icon={<img src={ic.globe} alt="" className="w-[120px] h-[120px] object-contain" />} title="PeulNation" onComplete={() => setShowSplash(false)} />
 
   return (
     <div className="min-h-screen">
